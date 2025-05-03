@@ -203,7 +203,7 @@
   }
 }
 
-/* Panel styling with enhanced blur and glow */
+/* Panel styling with enhanced blur, glow, and restored border */
 .panel {
   width: 100%;
   height: 100vh;
@@ -211,10 +211,9 @@
   background: var(--main-gradient);
   background-size: 400% 400%;
   animation: gradientFlow 15s ease infinite;
-  border-radius: 0; /* Remove border radius for full screen */
+  border-radius: 0; /* Keep corners square for full screen */
   padding: 1rem;
-  box-shadow: none; /* Remove shadow for full screen */
-  border: none; /* Remove border for full screen */
+  box-shadow: inset 0 0 0 6px var(--border-color); /* Inset border with 1.5x thickness */
   color: var(--text-color);
   display: flex;
   flex-direction: column;
@@ -230,15 +229,29 @@
 .panel::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 6px; /* Match the border thickness */
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
   background: var(--panel-color);
   backdrop-filter: blur(20px);
-  border-radius: 0; /* Remove border radius for full screen */
   z-index: -1;
   transition: background var(--transition-normal);
+}
+
+/* Add a gradient border effect */
+.panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--main-gradient);
+  background-size: 400% 400%;
+  animation: gradientFlow 15s ease infinite;
+  z-index: -2;
+  pointer-events: none;
 }
 
 /* Navbar styling */
