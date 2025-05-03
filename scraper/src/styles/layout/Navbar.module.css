@@ -1,0 +1,208 @@
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, rgba(76, 0, 255, 0.2) 0%, rgba(255, 0, 128, 0.2) 100%);
+    backdrop-filter: blur(5px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 10;
+  }
+  
+  .lightTheme .navbar {
+    background: linear-gradient(90deg, rgba(76, 0, 255, 0.1) 0%, rgba(255, 0, 128, 0.1) 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .navbarBrand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .titleIcon {
+    color: #fff;
+    background: linear-gradient(135deg, rgba(76, 0, 255, 1) 0%, rgba(255, 0, 128, 1) 100%);
+    padding: 6px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .lightTheme .titleIcon {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, rgba(76, 0, 255, 1) 0%, rgba(255, 0, 128, 1) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
+  }
+  
+  .navTabs {
+    display: flex;
+    gap: 5px;
+    flex: 1;
+    justify-content: center;
+    margin: 0 20px;
+  }
+  
+  .navTab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .lightTheme .navTab {
+    color: rgba(0, 0, 0, 0.6);
+  }
+  
+  .navTab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+  
+  .lightTheme .navTab:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #000;
+  }
+  
+  .activeNavTab {
+    background: linear-gradient(135deg, rgba(76, 0, 255, 0.2) 0%, rgba(255, 0, 128, 0.2) 100%);
+    color: #fff;
+    font-weight: 500;
+  }
+  
+  .lightTheme .activeNavTab {
+    background: linear-gradient(135deg, rgba(76, 0, 255, 0.1) 0%, rgba(255, 0, 128, 0.1) 100%);
+    color: #000;
+  }
+  
+  .tabIconWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .spinnerBadge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, rgba(76, 0, 255, 1) 0%, rgba(255, 0, 128, 1) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+  }
+  
+  .spinnerBadge svg {
+    animation: spin 1s linear infinite;
+  }
+  
+  .navActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .exportButton {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(76, 0, 255, 0.8) 0%, rgba(255, 0, 128, 0.8) 100%);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    font-weight: 500;
+  }
+  
+  .exportButton:hover {
+    opacity: 0.9;
+  }
+  
+  .themeToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .lightTheme .themeToggle {
+    background: rgba(0, 0, 0, 0.05);
+    color: #000;
+  }
+  
+  .themeToggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .lightTheme .themeToggle:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .navbar {
+      flex-wrap: wrap;
+      padding: 10px 15px;
+    }
+  
+    .navTabs {
+      order: 3;
+      width: 100%;
+      margin: 10px 0 0;
+      overflow-x: auto;
+      justify-content: flex-start;
+      padding-bottom: 5px;
+    }
+  
+    .navTab {
+      padding: 6px 12px;
+      font-size: 0.9rem;
+    }
+  
+    .navTab span {
+      display: none;
+    }
+  
+    .exportButton span {
+      display: none;
+    }
+  
+    .exportButton {
+      padding: 8px;
+    }
+  }
+  
