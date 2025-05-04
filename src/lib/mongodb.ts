@@ -192,18 +192,33 @@ export async function getCollectionStats(collectionName: string) {
     // Get unique subsectors
     const uniqueSubsectors = await collection.distinct("subsector")
 
-    // Get average stars
+    // Get average stars - FIX: Only include numeric stars and handle conversion errors
     const starsAggregation = await collection
       .aggregate([
         {
           $match: {
-            stars: { $exists: true, $ne: "" },
+            stars: {
+              $exists: true,
+              $ne: "",
+              $ne: "N/A",
+              // Only include records where stars can be converted to a number
+              $regex: /^[0-9]+(\.[0-9]+)?$/,
+            },
           },
         },
         {
           $group: {
             _id: null,
-            avgStars: { $avg: { $toDouble: "$stars" } },
+            avgStars: {
+              $avg: {
+                $convert: {
+                  input: "$stars",
+                  to: "double",
+                  onError: 0, // Return 0 if conversion fails
+                  onNull: 0, // Return 0 if value is null
+                },
+              },
+            },
           },
         },
       ])
