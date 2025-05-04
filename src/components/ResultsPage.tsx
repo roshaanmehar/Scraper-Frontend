@@ -358,7 +358,18 @@ export default function ResultsPage() {
                 ))
               ) : (
                 <div className={styles.noResults}>
-                  <p>No businesses with email addresses found.</p>
+                  <p>No businesses with email addresses found in the "{selectedCollection}" collection.</p>
+                  <p className={styles.helpText}>
+                    Please check that:
+                    <ul>
+                      <li>The "Leeds" database exists in your MongoDB instance</li>
+                      <li>The "{selectedCollection}" collection exists in the "Leeds" database</li>
+                      <li>There are records in the collection with email addresses</li>
+                    </ul>
+                    <a href="/api/test-db" target="_blank" rel="noopener noreferrer" className={styles.testLink}>
+                      Run Database Test
+                    </a>
+                  </p>
                 </div>
               )}
             </div>
