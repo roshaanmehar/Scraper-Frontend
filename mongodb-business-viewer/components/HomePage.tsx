@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Play, AlertCircle } from 'lucide-react'
+import { Play, AlertCircle } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/HomePage.module.css"
 
@@ -46,43 +46,6 @@ export default function HomePage() {
       router.push("/results")
     }, 1500)
   }
-
-  // Create ripple effect on buttons
-  const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
-    try {
-      const button = event.currentTarget;
-      if (!button) return;
-      
-      const circle = document.createElement("span");
-      const diameter = Math.max(button.clientWidth || 0, button.clientHeight || 0);
-      const radius = diameter / 2;
-
-      // Get button position
-      const rect = button.getBoundingClientRect();
-
-      circle.style.width = circle.style.height = `${diameter}px`;
-      circle.style.left = `${event.clientX - rect.left - radius}px`;
-      circle.style.top = `${event.clientY - rect.top - radius}px`;
-      circle.classList.add("ripple");
-
-      // Remove existing ripples
-      const ripple = button.getElementsByClassName("ripple")[0];
-      if (ripple) {
-        ripple.remove();
-      }
-
-      button.appendChild(circle);
-
-      // Remove ripple after animation
-      setTimeout(() => {
-        if (circle && circle.parentElement) {
-          circle.remove();
-        }
-      }, 600);
-    } catch (error) {
-      console.error("Ripple effect error:", error);
-    }
-  };
 
   return (
     <AppLayout activeTab="home">
@@ -138,7 +101,6 @@ export default function HomePage() {
               <button
                 type="submit"
                 className={`${styles.startButton} ${isLoading ? styles.loadingButton : ""}`}
-                onClick={(e) => createRipple(e)}
                 disabled={isLoading}
               >
                 {isLoading ? (
