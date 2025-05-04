@@ -3,7 +3,19 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Download, Search, MapPin, Phone, Globe, Mail, Loader, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import {
+  Download,
+  Search,
+  MapPin,
+  Phone,
+  Globe,
+  Mail,
+  Loader,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  AlertCircle,
+} from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/ResultsPage.module.css"
 
@@ -107,7 +119,18 @@ export default function ResultsPage() {
         }
 
         if (data.data && Array.isArray(data.data)) {
-          setBusinesses(data.data)
+          // Filter out any businesses without valid emails (extra safety check)
+          const validBusinesses = data.data.filter((business) => {
+            if (!business.email) return false
+
+            if (Array.isArray(business.email)) {
+              return business.email.length > 0 && business.email.some((e) => e && e !== "N/A")
+            }
+
+            return business.email && business.email !== "N/A" && business.email !== ""
+          })
+
+          setBusinesses(validBusinesses)
           setTotalPages(data.pagination.totalPages)
           setStats(data.stats)
         }
@@ -169,6 +192,28 @@ export default function ResultsPage() {
     return cleanUrl.length > maxLength ? cleanUrl.substring(0, maxLength) + "..." : cleanUrl
   }
 
+  // Check if email is valid (not empty and not "N/A")
+  const isValidEmail = (email: string | string[] | undefined): boolean => {
+    if (!email) return false
+
+    if (Array.isArray(email)) {
+      return email.length > 0 && email.some((e) => e && e !== "N/A")
+    }
+
+    return email !== "N/A" && email !== ""
+  }
+
+  // Get valid emails from email field
+  const getValidEmails = (email: string | string[] | undefined): string[] => {
+    if (!email) return []
+
+    if (Array.isArray(email)) {
+      return email.filter((e) => e && e !== "N/A")
+    }
+
+    return email !== "N/A" && email !== "" ? [email] : []
+  }
+
   // Export data as CSV
   const exportToCSV = async () => {
     setIsLoading(true)
@@ -185,7 +230,9 @@ export default function ResultsPage() {
       const data = await response.json()
 
       if (data.data && Array.isArray(data.data)) {
-        exportBusinessesToCSV(data.data)
+        // Filter businesses with valid emails
+        const businessesWithEmail = data.data.filter((business) => isValidEmail(business.email))
+        exportBusinessesToCSV(businessesWithEmail)
       }
     } catch (err) {
       console.error("Failed to export data:", err)
@@ -202,7 +249,7 @@ export default function ResultsPage() {
     // Create CSV rows
     const rows = businesses
       .map((business: Business) => {
-        const emails = Array.isArray(business.email) ? business.email.join("; ") : business.email
+        const emails = getValidEmails(business.email).join("; ")
 
         return [
           `"${business.businessname || ""}"`,
@@ -359,79 +406,85 @@ export default function ResultsPage() {
           <>
             <div className={styles.businessList}>
               {businesses.length > 0 ? (
-                businesses.map((business, index) => (
-                  <div key={business._id || index} className={styles.businessCard}>
-                    <div className={styles.businessHeader}>
-                      <h3 className={styles.businessName}>{business.businessname || "Unnamed Business"}</h3>
-                      {business.stars && (
-                        <div className={styles.businessRating}>
-                          <span className={styles.stars}>{business.stars}</span>
-                          {business.numberofreviews && (
-                            <span className={styles.reviewCount}>({business.numberofreviews} reviews)</span>
+                businesses
+                  .map((business, index) => {
+                    const validEmails = getValidEmails(business.email)
+
+                    // Skip businesses without valid emails
+                    if (validEmails.length === 0) return null
+
+                    return (
+                      <div key={business._id || index} className={styles.businessCard}>
+                        <div className={styles.businessHeader}>
+                          <h3 className={styles.businessName}>{business.businessname || "Unnamed Business"}</h3>
+                          {business.stars && (
+                            <div className={styles.businessRating}>
+                              <span className={styles.stars}>{business.stars}</span>
+                              {business.numberofreviews && (
+                                <span className={styles.reviewCount}>({business.numberofreviews} reviews)</span>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
 
-                    <div className={styles.businessDetails}>
-                      {business.address && (
-                        <div className={styles.businessDetail}>
-                          <MapPin size={16} />
-                          <span>{business.address}</span>
-                        </div>
-                      )}
+                        <div className={styles.businessDetails}>
+                          {business.address && (
+                            <div className={styles.businessDetail}>
+                              <MapPin size={16} />
+                              <span>{business.address}</span>
+                            </div>
+                          )}
 
-                      {business.phonenumber && (
-                        <div className={styles.businessDetail}>
-                          <Phone size={16} />
-                          <span>{business.phonenumber}</span>
-                        </div>
-                      )}
+                          {business.phonenumber && (
+                            <div className={styles.businessDetail}>
+                              <Phone size={16} />
+                              <span>{business.phonenumber}</span>
+                            </div>
+                          )}
 
-                      {business.website && (
-                        <div className={styles.businessDetail}>
-                          <Globe size={16} />
-                          <a href={business.website} target="_blank" rel="noopener noreferrer">
-                            {truncateUrl(business.website)}
-                          </a>
-                        </div>
-                      )}
-
-                      {business.email && (
-                        <div className={styles.businessDetail}>
-                          <Mail size={16} />
-                          <div className={styles.emailList}>
-                            {Array.isArray(business.email) ? (
-                              business.email.map((email, index) => (
-                                <a key={index} href={`mailto:${email}`} className={styles.emailItem}>
-                                  {email}
-                                </a>
-                              ))
-                            ) : (
-                              <a href={`mailto:${business.email}`} className={styles.emailItem}>
-                                {business.email}
+                          {business.website && business.website !== "N/A" && (
+                            <div className={styles.businessDetail}>
+                              <Globe size={16} />
+                              <a href={business.website} target="_blank" rel="noopener noreferrer">
+                                {truncateUrl(business.website)}
                               </a>
-                            )}
-                          </div>
+                            </div>
+                          )}
+
+                          {validEmails.length > 0 && (
+                            <div className={styles.businessDetail}>
+                              <Mail size={16} />
+                              <div className={styles.emailList}>
+                                {validEmails.map((email, idx) => (
+                                  <a key={idx} href={`mailto:${email}`} className={styles.emailItem}>
+                                    {email}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))
+                      </div>
+                    )
+                  })
+                  .filter(Boolean) // Remove null entries
               ) : (
                 <div className={styles.noResults}>
-                  <p>No businesses with email addresses found in the "{selectedCollection}" collection.</p>
-                  <p className={styles.helpText}>
-                    Please check that:
-                    <ul>
-                      <li>The "Leeds" database exists in your MongoDB instance</li>
-                      <li>The "{selectedCollection}" collection exists in the "Leeds" database</li>
-                      <li>There are records in the collection with email addresses</li>
-                    </ul>
-                    <a href="/api/test-db" target="_blank" rel="noopener noreferrer" className={styles.testLink}>
-                      Run Database Test
-                    </a>
-                  </p>
+                  <p>No businesses with valid email addresses found in the "{selectedCollection}" collection.</p>
+                  <div className={styles.helpText}>
+                    <AlertCircle size={20} className={styles.alertIcon} />
+                    <p>
+                      Please check that:
+                      <ul>
+                        <li>The "Leeds" database exists in your MongoDB instance</li>
+                        <li>The "{selectedCollection}" collection exists in the "Leeds" database</li>
+                        <li>There are records in the collection with valid email addresses (not empty or "N/A")</li>
+                      </ul>
+                      <a href="/api/test-db" target="_blank" rel="noopener noreferrer" className={styles.testLink}>
+                        Run Database Test
+                      </a>
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
