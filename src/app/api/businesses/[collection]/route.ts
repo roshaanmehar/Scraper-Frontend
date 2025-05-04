@@ -3,8 +3,8 @@ import { getBusinessData, getCollectionStats } from "@/lib/mongodb"
 
 export async function GET(request: NextRequest, { params }: { params: { collection: string } }) {
   try {
-    // Properly handle params
-    const collection = params.collection
+    // Fix: Ensure params.collection is properly handled
+    const collection = await Promise.resolve(params.collection)
     const searchParams = request.nextUrl.searchParams
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "50")
