@@ -47,26 +47,39 @@ export async function getBusinessData(
     const { db } = await connectToDatabase()
     const collection = db.collection(collectionName)
 
-    // Build query - ALWAYS filter for records with email
+    // Build query - ONLY include records with valid emails
+    // This complex query ensures we only get records with actual email values
     const query: any = {
-      email: { $exists: true, $ne: [] },
+      $and: [
+        { email: { $exists: true } }, // Email field must exist
+        {
+          $or: [
+            // For array emails, must have at least one non-empty value
+            { $and: [{ email: { $type: "array" } }, { email: { $ne: [] } }] },
+            // For string emails, must be non-empty and not "N/A"
+            { $and: [{ email: { $type: "string" } }, { email: { $ne: "" } }, { email: { $ne: "N/A" } }] },
+          ],
+        },
+      ],
     }
 
     // Add search term if provided
     if (searchTerm) {
-      query.$or = [
-        { businessname: { $regex: searchTerm, $options: "i" } },
-        { email: { $regex: searchTerm, $options: "i" } },
-      ]
+      query.$and.push({
+        $or: [
+          { businessname: { $regex: searchTerm, $options: "i" } },
+          { email: { $regex: searchTerm, $options: "i" } },
+        ],
+      })
 
       // Handle phone number search - could be stored as string or number
       if (!isNaN(Number(searchTerm))) {
         // If it's a number, search both string and number representations
-        query.$or.push({ phonenumber: { $regex: searchTerm, $options: "i" } })
-        query.$or.push({ phonenumber: Number(searchTerm) })
+        query.$and[query.$and.length - 1].$or.push({ phonenumber: { $regex: searchTerm, $options: "i" } })
+        query.$and[query.$and.length - 1].$or.push({ phonenumber: Number(searchTerm) })
       } else {
         // If it's not a number, just search as string
-        query.$or.push({ phonenumber: { $regex: searchTerm, $options: "i" } })
+        query.$and[query.$and.length - 1].$or.push({ phonenumber: { $regex: searchTerm, $options: "i" } })
       }
     }
 
@@ -97,21 +110,34 @@ export async function getBusinessData(
     // Sample data for debugging
     if (data.length > 0) {
       console.log(`Sample document: ${JSON.stringify(data[0])}`)
+      // Check if the sample document has a valid email
+      const sampleEmail = data[0].email
+      console.log(`Sample email: ${JSON.stringify(sampleEmail)}`)
+      if (Array.isArray(sampleEmail)) {
+        console.log(`Email is array with ${sampleEmail.length} items`)
+      } else {
+        console.log(`Email is ${typeof sampleEmail}: ${sampleEmail}`)
+      }
     } else {
       // Check if collection exists and has documents
-      const sampleData = await collection
-        .find({ email: { $exists: true, $ne: [] } })
-        .limit(1)
-        .toArray()
-      console.log(`Sample data from ${collectionName} with email: ${JSON.stringify(sampleData)}`)
-
-      // Count total documents in collection
       const totalDocs = await collection.countDocuments({})
       console.log(`Total documents in ${collectionName}: ${totalDocs}`)
 
-      // Count documents with email
-      const docsWithEmail = await collection.countDocuments({ email: { $exists: true, $ne: [] } })
-      console.log(`Documents with email in ${collectionName}: ${docsWithEmail}`)
+      // Count documents with email field
+      const docsWithEmailField = await collection.countDocuments({ email: { $exists: true } })
+      console.log(`Documents with email field in ${collectionName}: ${docsWithEmailField}`)
+
+      // Count documents with non-empty email arrays
+      const docsWithNonEmptyEmailArray = await collection.countDocuments({
+        email: { $type: "array", $ne: [] },
+      })
+      console.log(`Documents with non-empty email arrays: ${docsWithNonEmptyEmailArray}`)
+
+      // Count documents with non-empty email strings
+      const docsWithNonEmptyEmailString = await collection.countDocuments({
+        email: { $type: "string", $ne: "", $ne: "N/A" },
+      })
+      console.log(`Documents with non-empty email strings: ${docsWithNonEmptyEmailString}`)
     }
 
     return {
@@ -145,14 +171,22 @@ export async function getCollectionStats(collectionName: string) {
     // Get total records
     const totalRecords = await collection.countDocuments({})
 
-    // Get records with email
+    // Get records with valid email (not empty, not "N/A")
     const recordsWithEmail = await collection.countDocuments({
-      email: { $exists: true, $ne: [] },
+      $and: [
+        { email: { $exists: true } },
+        {
+          $or: [
+            { $and: [{ email: { $type: "array" } }, { email: { $ne: [] } }] },
+            { $and: [{ email: { $type: "string" } }, { email: { $ne: "" } }, { email: { $ne: "N/A" } }] },
+          ],
+        },
+      ],
     })
 
     // Get records with website
     const recordsWithWebsite = await collection.countDocuments({
-      website: { $exists: true, $ne: "" },
+      website: { $exists: true, $ne: "", $ne: "N/A" },
     })
 
     // Get unique subsectors
