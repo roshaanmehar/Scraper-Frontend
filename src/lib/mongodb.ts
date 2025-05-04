@@ -35,22 +35,51 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
   }
 }
 
-export async function getBusinessData(collectionName: string, page = 1, limit = 50, searchTerm = "") {
+export async function getBusinessData(
+  collectionName: string,
+  page = 1,
+  limit = 50,
+  searchTerm = "",
+  sortField = "businessname",
+  sortOrder = "asc",
+) {
   try {
     const { db } = await connectToDatabase()
     const collection = db.collection(collectionName)
 
-    // Build query
-    const query: any = {}
+    // Build query - ALWAYS filter for records with email
+    const query: any = {
+      email: { $exists: true, $ne: [] },
+    }
+
+    // Add search term if provided
     if (searchTerm) {
       query.$or = [
         { businessname: { $regex: searchTerm, $options: "i" } },
         { email: { $regex: searchTerm, $options: "i" } },
-        { phonenumber: { $regex: searchTerm, $options: "i" } },
       ]
+
+      // Handle phone number search - could be stored as string or number
+      if (!isNaN(Number(searchTerm))) {
+        // If it's a number, search both string and number representations
+        query.$or.push({ phonenumber: { $regex: searchTerm, $options: "i" } })
+        query.$or.push({ phonenumber: Number(searchTerm) })
+      } else {
+        // If it's not a number, just search as string
+        query.$or.push({ phonenumber: { $regex: searchTerm, $options: "i" } })
+      }
     }
 
     console.log(`MongoDB Query: ${JSON.stringify(query)}`)
+
+    // Determine sort direction
+    const sortDirection = sortOrder === "asc" ? 1 : -1
+
+    // Create sort object
+    const sort: any = {}
+    sort[sortField] = sortDirection
+
+    console.log(`Sorting by ${sortField} in ${sortOrder} order`)
 
     // Get total count
     const total = await collection.countDocuments(query)
@@ -60,8 +89,8 @@ export async function getBusinessData(collectionName: string, page = 1, limit = 
     const skip = (page - 1) * limit
     const totalPages = Math.ceil(total / limit)
 
-    // Get data
-    const data = await collection.find(query).sort({ businessname: 1 }).skip(skip).limit(limit).toArray()
+    // Get data with sorting
+    const data = await collection.find(query).sort(sort).skip(skip).limit(limit).toArray()
 
     console.log(`Retrieved ${data.length} documents`)
 
@@ -70,12 +99,19 @@ export async function getBusinessData(collectionName: string, page = 1, limit = 
       console.log(`Sample document: ${JSON.stringify(data[0])}`)
     } else {
       // Check if collection exists and has documents
-      const sampleData = await collection.find({}).limit(1).toArray()
-      console.log(`Sample data from ${collectionName}: ${JSON.stringify(sampleData)}`)
+      const sampleData = await collection
+        .find({ email: { $exists: true, $ne: [] } })
+        .limit(1)
+        .toArray()
+      console.log(`Sample data from ${collectionName} with email: ${JSON.stringify(sampleData)}`)
 
       // Count total documents in collection
       const totalDocs = await collection.countDocuments({})
       console.log(`Total documents in ${collectionName}: ${totalDocs}`)
+
+      // Count documents with email
+      const docsWithEmail = await collection.countDocuments({ email: { $exists: true, $ne: [] } })
+      console.log(`Documents with email in ${collectionName}: ${docsWithEmail}`)
     }
 
     return {
