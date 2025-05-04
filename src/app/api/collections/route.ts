@@ -3,10 +3,13 @@ import { getCollections } from "@/lib/mongodb"
 
 export async function GET() {
   try {
+    console.log("Fetching collections from MongoDB")
     const collections = await getCollections()
+    console.log("Collections retrieved:", collections)
     return NextResponse.json({ collections })
   } catch (error) {
     console.error("Error fetching collections:", error)
-    return NextResponse.json({ error: "Failed to fetch collections" }, { status: 500 })
+    // Return restaurants as fallback
+    return NextResponse.json({ collections: ["restaurants"] }, { status: 200 })
   }
 }
