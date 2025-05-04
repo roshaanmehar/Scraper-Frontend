@@ -3,21 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import {
-  Download,
-  Search,
-  ArrowLeft,
-  MapPin,
-  Phone,
-  Globe,
-  Mail,
-  Tag,
-  Database,
-  Star,
-  Calendar,
-  Loader,
-} from "lucide-react"
-import Link from "next/link"
+import { Download, Search, MapPin, Phone, Globe, Mail, Loader } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/ResultsPage.module.css"
 import { mockBusinessData } from "@/lib/mock-data"
@@ -198,6 +184,12 @@ export default function ResultsPage() {
     }
   }
 
+  // Truncate long URLs
+  const truncateUrl = (url: string, maxLength: number) => {
+    const cleanUrl = url.replace(/^https?:\/\//, "")
+    return cleanUrl.length > maxLength ? cleanUrl.substring(0, maxLength) + "..." : cleanUrl
+  }
+
   // Export data as CSV
   const exportToCSV = async () => {
     setIsLoading(true)
@@ -307,9 +299,7 @@ export default function ResultsPage() {
       <div className={styles.resultsContainer}>
         <div className={styles.resultsHeader}>
           <div className={styles.resultsTitle}>
-            <h2>Business Data</h2>
-            {stats && <span className={styles.resultCount}>{stats.recordsWithEmail} businesses with email found</span>}
-            {useMockData && <span className={styles.mockDataBadge}>Using Mock Data</span>}
+            <h2>Businesses with Email</h2>
           </div>
 
           <div className={styles.resultsActions}>
@@ -333,13 +323,8 @@ export default function ResultsPage() {
               disabled={isLoading || businesses.length === 0}
             >
               <Download size={18} />
-              <span>Export CSV</span>
+              <span>Export</span>
             </button>
-
-            <Link href="/" className={styles.backButton}>
-              <ArrowLeft size={18} />
-              <span>Back</span>
-            </Link>
           </div>
         </div>
 
@@ -359,57 +344,7 @@ export default function ResultsPage() {
               </option>
             ))}
           </select>
-
-          {/* Toggle for mock data */}
-          <button
-            className={`${styles.mockDataToggle} ${useMockData ? styles.mockDataActive : ""}`}
-            onClick={toggleMockData}
-          >
-            {useMockData ? "Using Mock Data" : "Use Mock Data"}
-          </button>
         </div>
-
-        {/* Stats Cards */}
-        {stats && (
-          <div className={styles.resultsStats}>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <Database size={20} />
-              </div>
-              <div>
-                <h3>Total Records</h3>
-                <p>{stats.totalRecords}</p>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <Mail size={20} />
-              </div>
-              <div>
-                <h3>With Email</h3>
-                <p>{stats.recordsWithEmail}</p>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <Globe size={20} />
-              </div>
-              <div>
-                <h3>With Website</h3>
-                <p>{stats.recordsWithWebsite}</p>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>
-                <Star size={20} />
-              </div>
-              <div>
-                <h3>Avg. Rating</h3>
-                <p>{stats.avgStars}</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Loading State */}
         {isLoading && (
@@ -441,84 +376,68 @@ export default function ResultsPage() {
           <>
             <div className={styles.businessList}>
               {businesses.length > 0 ? (
-                businesses.map((business, index) => (
-                  <div key={business._id || index} className={styles.businessCard}>
-                    <h3 className={styles.businessName}>
-                      {business.businessname || business.name || "Unnamed Business"}
-                    </h3>
+                businesses
+                  .filter((business) => {
+                    // Only show businesses with emails
+                    const hasEmail =
+                      business.email &&
+                      (Array.isArray(business.email) ? business.email.length > 0 : business.email !== "")
+                    return hasEmail
+                  })
+                  .map((business, index) => (
+                    <div key={business._id || index} className={styles.businessCard}>
+                      <h3 className={styles.businessName}>
+                        {business.businessname || business.name || "Unnamed Business"}
+                      </h3>
 
-                    <div className={styles.businessMeta}>
-                      {business.stars && (
-                        <div className={styles.businessRating}>
-                          <Star size={16} className={styles.starIcon} />
-                          <span>{business.stars}</span>
-                          {business.numberofreviews && (
-                            <span className={styles.reviewCount}>({business.numberofreviews} reviews)</span>
-                          )}
-                        </div>
-                      )}
-
-                      {(business.subsector || business.category) && (
-                        <div className={styles.businessCategory}>
-                          <Tag size={14} />
-                          <span>{business.subsector || business.category}</span>
-                        </div>
-                      )}
-
-                      {business.scraped_at && (
-                        <div className={styles.businessDate}>
-                          <Calendar size={14} />
-                          <span>{formatDate(business.scraped_at)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={styles.businessDetails}>
-                      {business.address && (
-                        <div className={styles.businessDetail}>
-                          <MapPin size={16} />
-                          <span>{business.address}</span>
-                        </div>
-                      )}
-
-                      {(business.phonenumber || business.phone) && (
-                        <div className={styles.businessDetail}>
-                          <Phone size={16} />
-                          <span>{business.phonenumber || business.phone}</span>
-                        </div>
-                      )}
-
-                      {business.website && (
-                        <div className={styles.businessDetail}>
-                          <Globe size={16} />
-                          <a href={business.website} target="_blank" rel="noopener noreferrer">
-                            {business.website.replace(/^https?:\/\//, "")}
-                          </a>
-                        </div>
-                      )}
-
-                      {business.email && (
-                        <div className={styles.businessDetail}>
-                          <Mail size={16} />
-                          <div className={styles.emailList}>
-                            {Array.isArray(business.email) ? (
-                              business.email.map((email, index) => (
-                                <a key={index} href={`mailto:${email}`}>
-                                  {email}
-                                </a>
-                              ))
-                            ) : (
-                              <a href={`mailto:${business.email}`}>{business.email}</a>
-                            )}
+                      <div className={styles.businessDetails}>
+                        {business.address && (
+                          <div className={styles.businessDetail}>
+                            <MapPin size={16} />
+                            <span>{business.address}</span>
                           </div>
-                        </div>
-                      )}
+                        )}
+
+                        {(business.phonenumber || business.phone) && (
+                          <div className={styles.businessDetail}>
+                            <Phone size={16} />
+                            <span>{business.phonenumber || business.phone}</span>
+                          </div>
+                        )}
+
+                        {business.website && (
+                          <div className={styles.businessDetail}>
+                            <Globe size={16} />
+                            <a href={business.website} target="_blank" rel="noopener noreferrer">
+                              {truncateUrl(business.website, 30)}
+                            </a>
+                          </div>
+                        )}
+
+                        {business.email && (
+                          <div className={styles.businessDetail}>
+                            <Mail size={16} />
+                            <div className={styles.emailList}>
+                              {Array.isArray(business.email) ? (
+                                business.email.map((email, index) => (
+                                  <a key={index} href={`mailto:${email}`} className={styles.emailItem}>
+                                    {email}
+                                  </a>
+                                ))
+                              ) : (
+                                <a href={`mailto:${business.email}`} className={styles.emailItem}>
+                                  {business.email}
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
               ) : (
                 <div className={styles.noResults}>
-                  <p>No businesses found matching your search criteria.</p>
+                  <p>No businesses with email addresses found.</p>
                 </div>
               )}
             </div>
