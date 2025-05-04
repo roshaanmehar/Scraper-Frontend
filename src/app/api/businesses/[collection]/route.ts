@@ -9,12 +9,16 @@ export async function GET(request: NextRequest, { params }: { params: { collecti
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "50")
     const searchTerm = searchParams.get("search") || ""
+    const sortField = searchParams.get("sortField") || "businessname"
+    const sortOrder = searchParams.get("sortOrder") || "asc"
 
     console.log(`Fetching data from collection: ${collection}`)
-    console.log(`Search params: page=${page}, limit=${limit}, search=${searchTerm}`)
+    console.log(
+      `Search params: page=${page}, limit=${limit}, search=${searchTerm}, sortField=${sortField}, sortOrder=${sortOrder}`,
+    )
 
     // Get business data
-    const result = await getBusinessData(collection, page, limit, searchTerm)
+    const result = await getBusinessData(collection, page, limit, searchTerm, sortField, sortOrder)
     console.log(`Retrieved ${result.data.length} records from ${collection}`)
 
     // Get collection stats
