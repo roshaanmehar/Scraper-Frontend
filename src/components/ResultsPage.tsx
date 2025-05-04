@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Download, Search, MapPin, Phone, Globe, Mail, Loader } from "lucide-react"
+import { Download, Search, MapPin, Phone, Globe, Mail, Loader, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/ResultsPage.module.css"
 
@@ -30,6 +30,9 @@ interface CollectionStats {
   avgStars: string
 }
 
+type SortField = "businessname" | "stars" | "numberofreviews" | "scraped_at"
+type SortOrder = "asc" | "desc"
+
 export default function ResultsPage() {
   const [collections, setCollections] = useState<string[]>([])
   const [selectedCollection, setSelectedCollection] = useState<string>("restaurants")
@@ -40,6 +43,8 @@ export default function ResultsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [sortField, setSortField] = useState<SortField>("businessname")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
 
   // Fetch collections on component mount
   useEffect(() => {
@@ -86,7 +91,7 @@ export default function ResultsPage() {
       try {
         console.log(`Fetching businesses from ${selectedCollection}, page ${currentPage}`)
         const response = await fetch(
-          `/api/businesses/${selectedCollection}?page=${currentPage}&search=${encodeURIComponent(searchTerm)}`,
+          `/api/businesses/${selectedCollection}?page=${currentPage}&search=${encodeURIComponent(searchTerm)}&sortField=${sortField}&sortOrder=${sortOrder}`,
         )
 
         if (!response.ok) {
@@ -115,7 +120,7 @@ export default function ResultsPage() {
     }
 
     fetchBusinesses()
-  }, [selectedCollection, currentPage, searchTerm])
+  }, [selectedCollection, currentPage, searchTerm, sortField, sortOrder])
 
   // Handle collection change
   const handleCollectionChange = (collection: string) => {
@@ -134,6 +139,29 @@ export default function ResultsPage() {
     setCurrentPage(page)
   }
 
+  // Handle sort field change
+  const handleSortFieldChange = (field: SortField) => {
+    if (field === sortField) {
+      // Toggle sort order if clicking the same field
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      // Set new field and default to ascending
+      setSortField(field)
+      setSortOrder("asc")
+    }
+    setCurrentPage(1)
+  }
+
+  // Get sort icon
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) return <ArrowUpDown size={16} className={styles.sortIcon} />
+    return sortOrder === "asc" ? (
+      <ArrowUp size={16} className={styles.sortIcon} />
+    ) : (
+      <ArrowDown size={16} className={styles.sortIcon} />
+    )
+  }
+
   // Truncate long URLs
   const truncateUrl = (url: string, maxLength = 30) => {
     if (!url) return ""
@@ -147,7 +175,7 @@ export default function ResultsPage() {
     try {
       // Fetch all data for the selected collection (no pagination)
       const response = await fetch(
-        `/api/businesses/${selectedCollection}?limit=10000&search=${encodeURIComponent(searchTerm)}`,
+        `/api/businesses/${selectedCollection}?limit=10000&search=${encodeURIComponent(searchTerm)}&sortField=${sortField}&sortOrder=${sortOrder}`,
       )
 
       if (!response.ok) {
@@ -157,14 +185,7 @@ export default function ResultsPage() {
       const data = await response.json()
 
       if (data.data && Array.isArray(data.data)) {
-        // Filter businesses with emails
-        const businessesWithEmail = data.data.filter((business) => {
-          const hasEmail =
-            business.email && (Array.isArray(business.email) ? business.email.length > 0 : business.email !== "")
-          return hasEmail
-        })
-
-        exportBusinessesToCSV(businessesWithEmail)
+        exportBusinessesToCSV(data.data)
       }
     } catch (err) {
       console.error("Failed to export data:", err)
@@ -209,13 +230,6 @@ export default function ResultsPage() {
     document.body.removeChild(link)
   }
 
-  // Filter businesses to only show those with emails
-  const filteredBusinesses = businesses.filter((business) => {
-    const hasEmail =
-      business.email && (Array.isArray(business.email) ? business.email.length > 0 : business.email !== "")
-    return hasEmail
-  })
-
   return (
     <AppLayout activeTab="results">
       <div className={styles.resultsContainer}>
@@ -258,7 +272,7 @@ export default function ResultsPage() {
             <button
               className={styles.exportButton}
               onClick={exportToCSV}
-              disabled={isLoading || filteredBusinesses.length === 0}
+              disabled={isLoading || businesses.length === 0}
             >
               <Download size={18} />
               <span>Export</span>
@@ -266,22 +280,58 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Collection Selector */}
-        <div className={styles.collectionSelector}>
-          <label htmlFor="collection">Select Collection:</label>
-          <select
-            id="collection"
-            value={selectedCollection}
-            onChange={(e) => handleCollectionChange(e.target.value)}
-            className={styles.collectionSelect}
-            disabled={isLoading}
-          >
-            {collections.map((collection) => (
-              <option key={collection} value={collection}>
-                {collection}
-              </option>
-            ))}
-          </select>
+        {/* Collection and Sort Controls */}
+        <div className={styles.controlsRow}>
+          <div className={styles.collectionSelector}>
+            <label htmlFor="collection">Collection:</label>
+            <select
+              id="collection"
+              value={selectedCollection}
+              onChange={(e) => handleCollectionChange(e.target.value)}
+              className={styles.collectionSelect}
+              disabled={isLoading}
+            >
+              {collections.map((collection) => (
+                <option key={collection} value={collection}>
+                  {collection}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.sortControls}>
+            <span className={styles.sortLabel}>Sort by:</span>
+            <div className={styles.sortButtons}>
+              <button
+                className={`${styles.sortButton} ${sortField === "businessname" ? styles.activeSortButton : ""}`}
+                onClick={() => handleSortFieldChange("businessname")}
+                disabled={isLoading}
+              >
+                Name {getSortIcon("businessname")}
+              </button>
+              <button
+                className={`${styles.sortButton} ${sortField === "stars" ? styles.activeSortButton : ""}`}
+                onClick={() => handleSortFieldChange("stars")}
+                disabled={isLoading}
+              >
+                Rating {getSortIcon("stars")}
+              </button>
+              <button
+                className={`${styles.sortButton} ${sortField === "numberofreviews" ? styles.activeSortButton : ""}`}
+                onClick={() => handleSortFieldChange("numberofreviews")}
+                disabled={isLoading}
+              >
+                Reviews {getSortIcon("numberofreviews")}
+              </button>
+              <button
+                className={`${styles.sortButton} ${sortField === "scraped_at" ? styles.activeSortButton : ""}`}
+                onClick={() => handleSortFieldChange("scraped_at")}
+                disabled={isLoading}
+              >
+                Date {getSortIcon("scraped_at")}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -308,10 +358,20 @@ export default function ResultsPage() {
         {!isLoading && (
           <>
             <div className={styles.businessList}>
-              {filteredBusinesses.length > 0 ? (
-                filteredBusinesses.map((business, index) => (
+              {businesses.length > 0 ? (
+                businesses.map((business, index) => (
                   <div key={business._id || index} className={styles.businessCard}>
-                    <h3 className={styles.businessName}>{business.businessname || "Unnamed Business"}</h3>
+                    <div className={styles.businessHeader}>
+                      <h3 className={styles.businessName}>{business.businessname || "Unnamed Business"}</h3>
+                      {business.stars && (
+                        <div className={styles.businessRating}>
+                          <span className={styles.stars}>{business.stars}</span>
+                          {business.numberofreviews && (
+                            <span className={styles.reviewCount}>({business.numberofreviews} reviews)</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     <div className={styles.businessDetails}>
                       {business.address && (
