@@ -12,12 +12,15 @@ export async function GET(request: NextRequest, { params }: { params: { collecti
     const searchTerm = searchParams.get("search") || ""
 
     console.log(`Fetching data from collection: ${collection}`)
+    console.log(`Search params: page=${page}, limit=${limit}, search=${searchTerm}`)
 
     // Get business data
     const result = await getBusinessData(collection, page, limit, searchTerm)
+    console.log(`Retrieved ${result.data.length} records from ${collection}`)
 
     // Get collection stats
     const stats = await getCollectionStats(collection)
+    console.log(`Collection stats: ${JSON.stringify(stats)}`)
 
     return NextResponse.json({
       ...result,
