@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb"
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const MONGODB_DB = process.env.MONGODB_DB || "Leeds"
+const MONGODB_DB = "Leeds" // Force it to use Leeds regardless of environment variable
 
 // Check if we're in production
 const isProd = process.env.NODE_ENV === "production"
