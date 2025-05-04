@@ -3,9 +3,8 @@ import { getBusinessData, getCollectionStats } from "@/lib/mongodb"
 
 export async function GET(request: NextRequest, { params }: { params: { collection: string } }) {
   try {
-    // Ensure params is properly awaited
-    // Fix for the params.collection error - use destructuring directly
-    const { collection } = params
+    // Properly handle params
+    const collection = params.collection
     const searchParams = request.nextUrl.searchParams
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "50")
