@@ -22,7 +22,29 @@ import {
   Loader,
   MapPin,
   Send,
+  RefreshCw,
 } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+
+// Types for API responses
+interface ScraperStatus {
+  running: {
+    postcode: boolean
+    gmb: boolean
+    email: boolean
+  }
+  dbStats: {
+    subsector_queue: number
+    restaurants: number
+    pending_emails: number
+  }
+  timestamp: string
+}
+
+interface ScraperLogs {
+  logs: string[]
+  timestamp: string
+}
 
 export default function ScraperControlPanel() {
   // State variables
@@ -41,6 +63,13 @@ export default function ScraperControlPanel() {
   const [errorMessage, setErrorMessage] = useState("")
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [emailsFound, setEmailsFound] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [scraperStatus, setScraperStatus] = useState<ScraperStatus | null>(null)
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null)
+  const [postcode, setPostcode] = useState("")
+  const [granularityLevel, setGranularityLevel] = useState("subsector")
+  const [excludeInactive, setExcludeInactive] = useState(true)
+  const [postcodeUrl, setPostcodeUrl] = useState("https://www.doogal.co.uk/UKPostcodes")
 
   // Refs
   const logsEndRef = useRef<HTMLDivElement>(null)
@@ -64,8 +93,83 @@ export default function ScraperControlPanel() {
     }
   }, [city, keyword, errorMessage])
 
+  // Fetch scraper status on mount and set up refresh interval
+  useEffect(() => {
+    fetchScraperStatus()
+    fetchLogs()
+
+    const interval = setInterval(() => {
+      fetchScraperStatus()
+      if (isRunning || isEmailScraping) {
+        fetchLogs()
+      }
+    }, 5000) // Refresh every 5 seconds
+
+    setRefreshInterval(interval)
+
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isRunning, isEmailScraping])
+
+  // Update local state based on scraper status
+  useEffect(() => {
+    if (scraperStatus) {
+      setIsRunning(scraperStatus.running.gmb)
+      setIsEmailScraping(scraperStatus.running.email)
+
+      // Update stats from MongoDB if available
+      if (scraperStatus.dbStats) {
+        setTotalSectors(scraperStatus.dbStats.subsector_queue || 0)
+        setTotalCards(scraperStatus.dbStats.restaurants || 0)
+
+        // Calculate progress if scraper is running
+        if (scraperStatus.running.gmb && scraperStatus.dbStats.subsector_queue > 0) {
+          // This is an approximation - we'd need more data for accurate progress
+          const processedSubsectors = fetchProcessedSubsectorsCount()
+          setProgress(Math.round((processedSubsectors / scraperStatus.dbStats.subsector_queue) * 100))
+        }
+      }
+    }
+  }, [scraperStatus])
+
   // Functions
-  const toggleScraper = () => {
+  const fetchScraperStatus = async () => {
+    try {
+      const response = await fetch("/api/scraper?action=status")
+      if (!response.ok) throw new Error("Failed to fetch scraper status")
+      const data = await response.json()
+      setScraperStatus(data)
+    } catch (error) {
+      console.error("Error fetching scraper status:", error)
+    }
+  }
+
+  const fetchLogs = async () => {
+    try {
+      // Determine which logs to fetch based on active scraper
+      let logType = "all"
+      if (isRunning && !isEmailScraping) logType = "gmb"
+      else if (isEmailScraping && !isRunning) logType = "email"
+
+      const response = await fetch(`/api/scraper?action=logs&type=${logType}&lines=50`)
+      if (!response.ok) throw new Error("Failed to fetch logs")
+      const data: ScraperLogs = await response.json()
+
+      // Update logs
+      setLogs(data.logs)
+    } catch (error) {
+      console.error("Error fetching logs:", error)
+    }
+  }
+
+  // Mock function - in a real app, this would fetch from the API
+  const fetchProcessedSubsectorsCount = () => {
+    // This would be replaced with actual API call
+    return Math.floor(totalSectors * (progress / 100)) || 0
+  }
+
+  const toggleScraper = async () => {
     if (!city || !keyword) {
       setErrorMessage(
         !city && !keyword
@@ -77,102 +181,187 @@ export default function ScraperControlPanel() {
       return
     }
 
-    setIsRunning(!isRunning)
+    try {
+      setIsLoading(true)
 
-    if (!isRunning) {
-      // Simulate starting the scraper
-      addLog(`Starting scraper for ${keyword} in ${city}`)
-      addLog(`Headless mode: ${headless ? "enabled" : "disabled"}`)
+      if (!isRunning) {
+        // Start the GMB scraper
+        const response = await fetch("/api/scraper", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "start_gmb_scraper",
+            params: {
+              subsector: city,
+              headless,
+              debug: false,
+              fast: false,
+            },
+          }),
+        })
 
-      // Simulate scraping process
-      setTotalSectors(10)
-      simulateScraping()
-    } else {
-      // Simulate stopping the scraper
-      addLog("Scraper stopped by user")
+        if (!response.ok) {
+          throw new Error("Failed to start scraper")
+        }
+
+        setIsRunning(true)
+        addLog(`Starting scraper for ${keyword} in ${city}`)
+        addLog(`Headless mode: ${headless ? "enabled" : "disabled"}`)
+
+        // Set initial values for progress display
+        setTotalSectors(10) // This will be updated from the API
+        setProgress(0)
+
+        // Switch to tasks tab to show progress
+        setActiveTab("tasks")
+
+        toast({
+          title: "Scraper Started",
+          description: `Scraping ${keyword} in ${city}`,
+        })
+      } else {
+        // Stop the scraper
+        const response = await fetch("/api/scraper", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "stop_scraper",
+            params: { type: "gmb" },
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to stop scraper")
+        }
+
+        setIsRunning(false)
+        addLog("Scraper stopped by user")
+
+        toast({
+          title: "Scraper Stopped",
+          description: "The scraper has been stopped",
+        })
+      }
+    } catch (error) {
+      console.error("Error toggling scraper:", error)
+      toast({
+        title: "Error",
+        description: `Failed to ${isRunning ? "stop" : "start"} scraper`,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const startEmailScraping = () => {
-    setIsEmailScraping(true)
-    setActiveTab("tasks") // Switch to tasks tab to show progress
+  const startEmailScraping = async () => {
+    try {
+      setIsLoading(true)
 
-    addLog("Starting email scraper...")
-    addLog("Initializing email extraction process")
+      const response = await fetch("/api/scraper", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "start_email_scraper",
+          params: {
+            threads: 5,
+            headless: true,
+            debug: false,
+          },
+        }),
+      })
 
-    // Simulate email scraping process
-    let emailCount = 0
-    const interval = setInterval(() => {
-      const newEmails = Math.floor(Math.random() * 5) + 1
-      emailCount += newEmails
-      setEmailsFound(emailCount)
-
-      addLog(`Found ${newEmails} new email${newEmails === 1 ? "" : "s"} (total: ${emailCount})`)
-
-      if (emailCount >= 25 || Math.random() > 0.8) {
-        clearInterval(interval)
-        addLog("Email scraping completed successfully")
-        setIsEmailScraping(false)
+      if (!response.ok) {
+        throw new Error("Failed to start email scraper")
       }
-    }, 2000)
+
+      setIsEmailScraping(true)
+      setActiveTab("tasks") // Switch to tasks tab to show progress
+
+      addLog("Starting email scraper...")
+      addLog("Initializing email extraction process")
+
+      toast({
+        title: "Email Scraper Started",
+        description: "Email extraction process has begun",
+      })
+
+      // Fetch initial email stats
+      fetchEmailStats()
+    } catch (error) {
+      console.error("Error starting email scraper:", error)
+      toast({
+        title: "Error",
+        description: "Failed to start email scraper",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const simulateScraping = () => {
-    const sectors = [
-      "RESTAURANTS",
-      "CAFES",
-      "BARS",
-      "HOTELS",
-      "RETAIL SHOPS",
-      "SUPERMARKETS",
-      "GYMS",
-      "SALONS",
-      "DENTISTS",
-      "MECHANICS",
-    ]
-    let sectorIndex = 0
-    let cards = 0
-    let upserts = 0
+  const fetchEmailStats = async () => {
+    try {
+      const response = await fetch("/api/data?action=stats")
+      if (!response.ok) throw new Error("Failed to fetch stats")
 
-    const interval = setInterval(() => {
-      if (sectorIndex >= sectors.length || !isRunning) {
-        clearInterval(interval)
-        if (isRunning) {
-          addLog("Scraping completed successfully")
-          setIsRunning(false)
-        }
-        return
+      const data = await response.json()
+      if (data.stats?.businesses?.byEmailStatus?.found) {
+        setEmailsFound(data.stats.businesses.byEmailStatus.found)
+      }
+    } catch (error) {
+      console.error("Error fetching email stats:", error)
+    }
+  }
+
+  const startPostcodeScraper = async () => {
+    if (!postcode) {
+      setErrorMessage("Please enter a postcode prefix")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      const response = await fetch("/api/scraper", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "start_postcode_scraper",
+          params: {
+            prefix: postcode,
+            city: "Leeds",
+            headless: true,
+            workers: 4,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to start postcode scraper")
       }
 
-      const currentSectorName = sectors[sectorIndex]
-      setCurrentSector(currentSectorName)
-      setProgress(Math.round(((sectorIndex + 1) / sectors.length) * 100))
+      addLog(`Starting postcode scraper for prefix: ${postcode}`)
+      addLog(`Granularity level: ${granularityLevel}`)
+      addLog(`Exclude inactive: ${excludeInactive ? "Yes" : "No"}`)
 
-      const sectorCards = Math.floor(Math.random() * 30) + 5
-      cards += sectorCards
-      const sectorUpserts = Math.floor(sectorCards * 0.7)
-      upserts += sectorUpserts
+      // Switch to tasks tab to show progress
+      setActiveTab("tasks")
 
-      setTotalCards(cards)
-      setNewUpserts(upserts)
-
-      addLog(`▶ (${sectorIndex + 1}/${sectors.length}) ${currentSectorName}`)
-
-      // Simulate some random events
-      if (Math.random() > 0.7) {
-        addLog(`Found ${sectorCards} businesses in ${currentSectorName}`)
-      }
-
-      if (Math.random() > 0.8) {
-        addLog(`WARNING: Possible rate limiting detected, slowing down...`)
-      }
-
-      addLog(
-        `✓ ${currentSectorName} - ${(Math.random() * 20 + 10).toFixed(1)}s cards=${sectorCards} new=${sectorUpserts}`,
-      )
-
-      sectorIndex++
-    }, 3000)
+      toast({
+        title: "Postcode Scraper Started",
+        description: `Scraping postcodes with prefix: ${postcode}`,
+      })
+    } catch (error) {
+      console.error("Error starting postcode scraper:", error)
+      toast({
+        title: "Error",
+        description: "Failed to start postcode scraper",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const addLog = (message: string) => {
@@ -180,12 +369,34 @@ export default function ScraperControlPanel() {
     setLogs((prev) => [...prev, `[${timestamp}] ${message}`])
   }
 
-  const exportData = () => {
-    addLog("Exporting data...")
-    // Simulate export delay
-    setTimeout(() => {
-      addLog("Data exported successfully")
-    }, 1500)
+  const exportData = async () => {
+    try {
+      setIsLoading(true)
+      addLog("Exporting data...")
+
+      const response = await fetch("/api/data?action=export&type=businesses&format=csv")
+      if (!response.ok) throw new Error("Failed to export data")
+
+      const data = await response.json()
+
+      addLog(`Data exported successfully: ${data.count} records`)
+
+      toast({
+        title: "Export Complete",
+        description: `Exported ${data.count} records to ${data.filename}`,
+      })
+    } catch (error) {
+      console.error("Error exporting data:", error)
+      addLog("Error exporting data")
+
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const toggleTheme = () => {
@@ -196,21 +407,32 @@ export default function ScraperControlPanel() {
   const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
     const button = event.currentTarget
 
-    const circle = document.createElement("span")
-    const diameter = Math.max(button.clientWidth, button.clientHeight)
-    const radius = diameter / 2
-
-    circle.style.width = circle.style.height = `${diameter}px`
-    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`
-    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`
-    circle.classList.add(styles.ripple)
-
+    // Prevent multiple ripples
     const ripple = button.getElementsByClassName(styles.ripple)[0]
     if (ripple) {
       ripple.remove()
     }
 
-    button.appendChild(circle)
+    // Use requestAnimationFrame for better performance
+    requestAnimationFrame(() => {
+      const circle = document.createElement("span")
+      const diameter = Math.max(button.clientWidth, button.clientHeight)
+      const radius = diameter / 2
+
+      circle.style.width = circle.style.height = `${diameter}px`
+      circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`
+      circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`
+      circle.classList.add(styles.ripple)
+
+      button.appendChild(circle)
+
+      // Clean up ripple after animation completes
+      setTimeout(() => {
+        if (circle.parentElement === button) {
+          button.removeChild(circle)
+        }
+      }, 600)
+    })
   }
 
   // Chart data for dashboard
@@ -306,8 +528,9 @@ export default function ScraperControlPanel() {
                   createRipple(e)
                 }}
                 title="Export Data"
+                disabled={isLoading}
               >
-                <Download size={18} />
+                {isLoading ? <Loader size={18} className={styles.spinningIcon} /> : <Download size={18} />}
                 <span>Export</span>
               </button>
             )}
@@ -320,6 +543,18 @@ export default function ScraperControlPanel() {
               }}
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            <button
+              className={styles.refreshButton}
+              onClick={(e) => {
+                fetchScraperStatus()
+                fetchLogs()
+                createRipple(e)
+              }}
+              title="Refresh Status"
+            >
+              <RefreshCw size={18} />
             </button>
           </div>
         </div>
@@ -342,26 +577,32 @@ export default function ScraperControlPanel() {
                 <div className={styles.requiredFields}>
                   <div className={styles.inputGroup}>
                     <label htmlFor="city">City</label>
-                    <input
-                      id="city"
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Enter city (e.g. London)"
-                      className={styles.input}
-                    />
+                    <div className={styles.inputWrapper}>
+                      <input
+                        id="city"
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Enter city (e.g. London)"
+                        className={styles.input}
+                        disabled={isRunning || isLoading}
+                      />
+                    </div>
                   </div>
 
                   <div className={styles.inputGroup}>
                     <label htmlFor="keyword">Keyword</label>
-                    <input
-                      id="keyword"
-                      type="text"
-                      value={keyword}
-                      onChange={(e) => setKeyword(e.target.value)}
-                      placeholder="Enter keyword (e.g. restaurants)"
-                      className={styles.input}
-                    />
+                    <div className={styles.inputWrapper}>
+                      <input
+                        id="keyword"
+                        type="text"
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
+                        placeholder="Enter keyword (e.g. restaurants)"
+                        className={styles.input}
+                        disabled={isRunning || isLoading}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -369,7 +610,13 @@ export default function ScraperControlPanel() {
                   <div className={styles.toggleGroup}>
                     <label htmlFor="headless">Headless Mode</label>
                     <label className={styles.switch}>
-                      <input id="headless" type="checkbox" checked={headless} onChange={() => setHeadless(!headless)} />
+                      <input
+                        id="headless"
+                        type="checkbox"
+                        checked={headless}
+                        onChange={() => setHeadless(!headless)}
+                        disabled={isRunning || isLoading}
+                      />
                       <span className={styles.slider}></span>
                     </label>
                   </div>
@@ -382,8 +629,13 @@ export default function ScraperControlPanel() {
                       toggleScraper()
                       createRipple(e)
                     }}
+                    disabled={isLoading}
                   >
-                    {isRunning ? (
+                    {isLoading ? (
+                      <>
+                        <Loader size={20} className={styles.spinningIcon} /> Please Wait...
+                      </>
+                    ) : isRunning ? (
                       <>
                         <Pause size={20} /> Stop Scraper
                       </>
@@ -458,14 +710,18 @@ export default function ScraperControlPanel() {
                   <button
                     className={`${styles.emailScrapeButton} ${isEmailScraping ? styles.emailScrapeButtonActive : ""}`}
                     onClick={(e) => {
-                      if (!isEmailScraping) {
+                      if (!isEmailScraping && !isLoading) {
                         startEmailScraping()
                       }
                       createRipple(e)
                     }}
-                    disabled={isEmailScraping}
+                    disabled={isEmailScraping || isLoading}
                   >
-                    {isEmailScraping ? (
+                    {isLoading ? (
+                      <>
+                        <Loader size={20} className={styles.spinningIcon} /> Please Wait...
+                      </>
+                    ) : isEmailScraping ? (
                       <>
                         <Loader size={20} className={styles.spinningIcon} /> Scraping Emails...
                       </>
@@ -501,11 +757,106 @@ export default function ScraperControlPanel() {
           {/* Postcodes Tab */}
           {activeTab === "postcodes" && (
             <div className={styles.postcodesTab}>
-              <h2 className={styles.sectionTitle}>Postcode Management</h2>
+              <h2 className={styles.sectionTitle}>Postcode Scraper</h2>
+
+              <div className={styles.mainConfigSection}>
+                {errorMessage && (
+                  <div className={styles.errorMessage}>
+                    <AlertCircle size={16} />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                <div className={styles.requiredFields}>
+                  <div className={styles.inputGroup}>
+                    <label htmlFor="postcodePrefix">Postcode Prefix</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        id="postcodePrefix"
+                        type="text"
+                        value={postcode}
+                        onChange={(e) => setPostcode(e.target.value)}
+                        placeholder="Enter prefix (e.g. LS, BD, SW1)"
+                        className={styles.input}
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label htmlFor="postcodeUrl">URL</label>
+                    <div className={styles.inputWrapper}>
+                      <input
+                        id="postcodeUrl"
+                        type="text"
+                        value={postcodeUrl}
+                        onChange={(e) => setPostcodeUrl(e.target.value)}
+                        placeholder="Enter URL (e.g. https://www.doogal.co.uk/UKPostcodes)"
+                        className={styles.input}
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.granularitySection}>
+                  <label htmlFor="granularity">Granularity Level</label>
+                  <div className={styles.selectWrapper}>
+                    <select
+                      id="granularity"
+                      className={styles.select}
+                      value={granularityLevel}
+                      onChange={(e) => setGranularityLevel(e.target.value)}
+                      disabled={isLoading}
+                    >
+                      <option value="sector">Sector (e.g. LS1)</option>
+                      <option value="subsector">Sub-sector (e.g. LS1 4)</option>
+                      <option value="fullpostcode">Full Postcode (e.g. LS1 4DL)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.toggleSection}>
+                  <div className={styles.toggleGroup}>
+                    <label htmlFor="excludeInactive">Exclude Inactive Postcodes</label>
+                    <label className={styles.switch}>
+                      <input
+                        id="excludeInactive"
+                        type="checkbox"
+                        checked={excludeInactive}
+                        onChange={() => setExcludeInactive(!excludeInactive)}
+                        disabled={isLoading}
+                      />
+                      <span className={styles.slider}></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className={styles.startButtonContainer}>
+                  <button
+                    className={styles.startButton}
+                    onClick={(e) => {
+                      startPostcodeScraper()
+                      createRipple(e)
+                    }}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader size={20} className={styles.spinningIcon} /> Please Wait...
+                      </>
+                    ) : (
+                      <>
+                        <Play size={20} /> Scrape Postcodes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
 
               <div className={styles.postcodesPlaceholder}>
                 <MapPin size={48} className={styles.postcodesIcon} />
-                <p>Postcode management features coming soon</p>
+                <p>Postcode scraper will extract data based on the selected granularity level</p>
               </div>
             </div>
           )}
