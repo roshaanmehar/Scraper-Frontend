@@ -80,19 +80,28 @@ export default function ResultsPage() {
     const fetchBusinesses = async () => {
       setIsLoading(true)
       try {
+        console.log(`Fetching businesses from ${selectedCollection}, page ${currentPage}`)
         const response = await fetch(
           `/api/businesses/${selectedCollection}?page=${currentPage}&search=${encodeURIComponent(searchTerm)}`,
         )
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
         const data = await response.json()
+        console.log("API response:", data)
 
         if (data.data) {
           setBusinesses(data.data)
           setTotalPages(data.pagination.totalPages)
           setStats(data.stats)
+        } else {
+          console.warn("No data property in API response")
         }
       } catch (err) {
-        setError("Failed to fetch business data")
-        console.error(err)
+        console.error("Error fetching business data:", err)
+        setError(`Failed to fetch business data: ${err instanceof Error ? err.message : String(err)}`)
       } finally {
         setIsLoading(false)
       }
