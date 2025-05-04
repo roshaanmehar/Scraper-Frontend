@@ -6,7 +6,6 @@ import { useState, useEffect } from "react"
 import { Download, Search, MapPin, Phone, Globe, Mail, Loader } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/ResultsPage.module.css"
-import { mockBusinessData } from "@/lib/mock-data"
 
 interface Business {
   _id: string
@@ -39,7 +38,6 @@ export default function ResultsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [useMockData, setUseMockData] = useState(false)
 
   // Fetch collections on component mount
   useEffect(() => {
@@ -51,19 +49,10 @@ export default function ResultsPage() {
         if (data.collections && data.collections.length > 0) {
           setCollections(data.collections)
           setSelectedCollection(data.collections[0])
-        } else {
-          // If no collections, use mock data
-          setUseMockData(true)
-          setCollections(["restaurants", "cafes", "hotels"])
-          setSelectedCollection("restaurants")
         }
       } catch (err) {
         console.error("Failed to fetch collections:", err)
         setError("Failed to fetch collections")
-        // Use mock data as fallback
-        setUseMockData(true)
-        setCollections(["restaurants", "cafes", "hotels"])
-        setSelectedCollection("restaurants")
       }
     }
 
@@ -77,23 +66,6 @@ export default function ResultsPage() {
     const fetchBusinesses = async () => {
       setIsLoading(true)
       setError(null)
-
-      if (useMockData) {
-        // Use mock data directly
-        setTimeout(() => {
-          setBusinesses(mockBusinessData)
-          setTotalPages(1)
-          setStats({
-            totalRecords: mockBusinessData.length,
-            recordsWithEmail: mockBusinessData.filter((b) => b.email).length,
-            recordsWithWebsite: mockBusinessData.filter((b) => b.website).length,
-            uniqueSubsectors: 5,
-            avgStars: "4.2",
-          })
-          setIsLoading(false)
-        }, 500) // Simulate loading
-        return
-      }
 
       try {
         console.log(`Fetching businesses from ${selectedCollection}, page ${currentPage}`)
@@ -117,40 +89,17 @@ export default function ResultsPage() {
           setBusinesses(data.data)
           setTotalPages(data.pagination.totalPages)
           setStats(data.stats)
-        } else {
-          console.warn("No data from API, using mock data instead")
-          // Use mock data as fallback
-          setBusinesses(mockBusinessData)
-          setTotalPages(1)
-          setStats({
-            totalRecords: mockBusinessData.length,
-            recordsWithEmail: mockBusinessData.filter((b) => b.email).length,
-            recordsWithWebsite: mockBusinessData.filter((b) => b.website).length,
-            uniqueSubsectors: 5,
-            avgStars: "4.2",
-          })
         }
       } catch (err) {
         console.error("Error fetching business data:", err)
         setError(`Failed to fetch business data: ${err instanceof Error ? err.message : String(err)}`)
-
-        // Use mock data as fallback on error
-        setBusinesses(mockBusinessData)
-        setTotalPages(1)
-        setStats({
-          totalRecords: mockBusinessData.length,
-          recordsWithEmail: mockBusinessData.filter((b) => b.email).length,
-          recordsWithWebsite: mockBusinessData.filter((b) => b.website).length,
-          uniqueSubsectors: 5,
-          avgStars: "4.2",
-        })
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchBusinesses()
-  }, [selectedCollection, currentPage, searchTerm, useMockData])
+  }, [selectedCollection, currentPage, searchTerm])
 
   // Handle collection change
   const handleCollectionChange = (collection: string) => {
@@ -169,23 +118,9 @@ export default function ResultsPage() {
     setCurrentPage(page)
   }
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A"
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    } catch (error) {
-      return "N/A"
-    }
-  }
-
   // Truncate long URLs
-  const truncateUrl = (url: string, maxLength: number) => {
+  const truncateUrl = (url: string, maxLength = 30) => {
+    if (!url) return ""
     const cleanUrl = url.replace(/^https?:\/\//, "")
     return cleanUrl.length > maxLength ? cleanUrl.substring(0, maxLength) + "..." : cleanUrl
   }
@@ -194,12 +129,6 @@ export default function ResultsPage() {
   const exportToCSV = async () => {
     setIsLoading(true)
     try {
-      // If using mock data, export that directly
-      if (useMockData) {
-        exportMockDataToCSV()
-        return
-      }
-
       // Fetch all data for the selected collection (no pagination)
       const response = await fetch(
         `/api/businesses/${selectedCollection}?limit=10000&search=${encodeURIComponent(searchTerm)}`,
@@ -212,16 +141,18 @@ export default function ResultsPage() {
       const data = await response.json()
 
       if (data.data && Array.isArray(data.data)) {
-        exportBusinessesToCSV(data.data)
-      } else {
-        // Fallback to mock data
-        exportMockDataToCSV()
+        // Filter businesses with emails
+        const businessesWithEmail = data.data.filter((business) => {
+          const hasEmail =
+            business.email && (Array.isArray(business.email) ? business.email.length > 0 : business.email !== "")
+          return hasEmail
+        })
+
+        exportBusinessesToCSV(businessesWithEmail)
       }
     } catch (err) {
       console.error("Failed to export data:", err)
       setError("Failed to export data")
-      // Fallback to mock data
-      exportMockDataToCSV()
     } finally {
       setIsLoading(false)
     }
@@ -229,7 +160,7 @@ export default function ResultsPage() {
 
   const exportBusinessesToCSV = (businesses: Business[]) => {
     // Create CSV header
-    const header = "Business Name,Address,Phone Number,Website,Email,Stars,Reviews,Subsector,Scraped At\n"
+    const header = "Business Name,Address,Phone Number,Website,Email\n"
 
     // Create CSV rows
     const rows = businesses
@@ -242,33 +173,6 @@ export default function ResultsPage() {
           `"${business.phonenumber || ""}"`,
           `"${business.website || ""}"`,
           `"${emails || ""}"`,
-          `"${business.stars || ""}"`,
-          `"${business.numberofreviews || ""}"`,
-          `"${business.subsector || ""}"`,
-          `"${formatDate(business.scraped_at)}"`,
-        ].join(",")
-      })
-      .join("\n")
-
-    // Create and download CSV file
-    const csvContent = header + rows
-    downloadCSV(csvContent, `${selectedCollection}_data.csv`)
-  }
-
-  const exportMockDataToCSV = () => {
-    // Create CSV header
-    const header = "Business Name,Address,Phone Number,Website,Email,Category\n"
-
-    // Create CSV rows
-    const rows = mockBusinessData
-      .map((business) => {
-        return [
-          `"${business.name || ""}"`,
-          `"${business.address || ""}"`,
-          `"${business.phone || ""}"`,
-          `"${business.website || ""}"`,
-          `"${business.email || ""}"`,
-          `"${business.category || ""}"`,
         ].join(",")
       })
       .join("\n")
@@ -289,10 +193,12 @@ export default function ResultsPage() {
     document.body.removeChild(link)
   }
 
-  // Toggle between real and mock data
-  const toggleMockData = () => {
-    setUseMockData(!useMockData)
-  }
+  // Filter businesses to only show those with emails
+  const filteredBusinesses = businesses.filter((business) => {
+    const hasEmail =
+      business.email && (Array.isArray(business.email) ? business.email.length > 0 : business.email !== "")
+    return hasEmail
+  })
 
   return (
     <AppLayout activeTab="results">
@@ -300,6 +206,22 @@ export default function ResultsPage() {
         <div className={styles.resultsHeader}>
           <div className={styles.resultsTitle}>
             <h2>Businesses with Email</h2>
+            {stats && (
+              <div className={styles.statsBar}>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>Total Records:</span>
+                  <span className={styles.statValue}>{stats.totalRecords}</span>
+                </div>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>With Email:</span>
+                  <span className={styles.statValue}>{stats.recordsWithEmail}</span>
+                </div>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>With Website:</span>
+                  <span className={styles.statValue}>{stats.recordsWithWebsite}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={styles.resultsActions}>
@@ -320,7 +242,7 @@ export default function ResultsPage() {
             <button
               className={styles.exportButton}
               onClick={exportToCSV}
-              disabled={isLoading || businesses.length === 0}
+              disabled={isLoading || filteredBusinesses.length === 0}
             >
               <Download size={18} />
               <span>Export</span>
@@ -362,11 +284,6 @@ export default function ResultsPage() {
               <button onClick={() => window.location.reload()} className={styles.retryButton}>
                 Retry
               </button>
-              {!useMockData && (
-                <button onClick={() => setUseMockData(true)} className={styles.useMockButton}>
-                  Use Mock Data
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -375,66 +292,56 @@ export default function ResultsPage() {
         {!isLoading && (
           <>
             <div className={styles.businessList}>
-              {businesses.length > 0 ? (
-                businesses
-                  .filter((business) => {
-                    // Only show businesses with emails
-                    const hasEmail =
-                      business.email &&
-                      (Array.isArray(business.email) ? business.email.length > 0 : business.email !== "")
-                    return hasEmail
-                  })
-                  .map((business, index) => (
-                    <div key={business._id || index} className={styles.businessCard}>
-                      <h3 className={styles.businessName}>
-                        {business.businessname || business.name || "Unnamed Business"}
-                      </h3>
+              {filteredBusinesses.length > 0 ? (
+                filteredBusinesses.map((business, index) => (
+                  <div key={business._id || index} className={styles.businessCard}>
+                    <h3 className={styles.businessName}>{business.businessname || "Unnamed Business"}</h3>
 
-                      <div className={styles.businessDetails}>
-                        {business.address && (
-                          <div className={styles.businessDetail}>
-                            <MapPin size={16} />
-                            <span>{business.address}</span>
-                          </div>
-                        )}
+                    <div className={styles.businessDetails}>
+                      {business.address && (
+                        <div className={styles.businessDetail}>
+                          <MapPin size={16} />
+                          <span>{business.address}</span>
+                        </div>
+                      )}
 
-                        {(business.phonenumber || business.phone) && (
-                          <div className={styles.businessDetail}>
-                            <Phone size={16} />
-                            <span>{business.phonenumber || business.phone}</span>
-                          </div>
-                        )}
+                      {business.phonenumber && (
+                        <div className={styles.businessDetail}>
+                          <Phone size={16} />
+                          <span>{business.phonenumber}</span>
+                        </div>
+                      )}
 
-                        {business.website && (
-                          <div className={styles.businessDetail}>
-                            <Globe size={16} />
-                            <a href={business.website} target="_blank" rel="noopener noreferrer">
-                              {truncateUrl(business.website, 30)}
-                            </a>
-                          </div>
-                        )}
+                      {business.website && (
+                        <div className={styles.businessDetail}>
+                          <Globe size={16} />
+                          <a href={business.website} target="_blank" rel="noopener noreferrer">
+                            {truncateUrl(business.website)}
+                          </a>
+                        </div>
+                      )}
 
-                        {business.email && (
-                          <div className={styles.businessDetail}>
-                            <Mail size={16} />
-                            <div className={styles.emailList}>
-                              {Array.isArray(business.email) ? (
-                                business.email.map((email, index) => (
-                                  <a key={index} href={`mailto:${email}`} className={styles.emailItem}>
-                                    {email}
-                                  </a>
-                                ))
-                              ) : (
-                                <a href={`mailto:${business.email}`} className={styles.emailItem}>
-                                  {business.email}
+                      {business.email && (
+                        <div className={styles.businessDetail}>
+                          <Mail size={16} />
+                          <div className={styles.emailList}>
+                            {Array.isArray(business.email) ? (
+                              business.email.map((email, index) => (
+                                <a key={index} href={`mailto:${email}`} className={styles.emailItem}>
+                                  {email}
                                 </a>
-                              )}
-                            </div>
+                              ))
+                            ) : (
+                              <a href={`mailto:${business.email}`} className={styles.emailItem}>
+                                {business.email}
+                              </a>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  ))
+                  </div>
+                ))
               ) : (
                 <div className={styles.noResults}>
                   <p>No businesses with email addresses found.</p>
