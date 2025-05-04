@@ -1,105 +1,47 @@
-import { MongoClient } from "mongodb"
+import { MongoClient, type Db } from "mongodb"
 
+// Connection URL
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const MONGODB_DB = "Leeds" // Force it to use Leeds regardless of environment variable
-
-// Check if we're in production
-const isProd = process.env.NODE_ENV === "production"
+// Database Name - Force to use "Leeds"
+const MONGODB_DB = "Leeds"
 
 let cachedClient: MongoClient | null = null
-let cachedDb: any = null
+let cachedDb: Db | null = null
 
-export async function connectToDatabase() {
+export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
+  console.log(`Connecting to MongoDB: ${MONGODB_URI}`)
+
+  // If we already have a connection, use it
+  if (cachedClient && cachedDb) {
+    console.log("Using cached database connection")
+    return { client: cachedClient, db: cachedDb }
+  }
+
   try {
-    // If we have a cached connection, use it
-    if (cachedClient && cachedDb) {
-      return { client: cachedClient, db: cachedDb }
-    }
-
-    console.log("Connecting to MongoDB:", MONGODB_URI)
-    console.log("Using database:", MONGODB_DB)
-
-    // Create a new MongoDB client
-    const client = new MongoClient(MONGODB_URI)
-
-    // Connect to the MongoDB server
-    await client.connect()
-    console.log("Connected to MongoDB successfully")
-
-    // Get the database
+    // Connect to MongoDB
+    const client = await MongoClient.connect(MONGODB_URI)
+    console.log(`Using database: ${MONGODB_DB}`)
     const db = client.db(MONGODB_DB)
 
-    // Cache the client and db for reuse
+    // Cache the connection
     cachedClient = client
     cachedDb = db
 
+    console.log("Connected to MongoDB successfully")
     return { client, db }
   } catch (error) {
-    console.error("MongoDB connection error:", error)
+    console.error("Failed to connect to MongoDB:", error)
     throw error
   }
 }
 
-export async function getCollections() {
-  try {
-    const { db } = await connectToDatabase()
-    const collections = await db.listCollections().toArray()
-
-    console.log(
-      "Available collections:",
-      collections.map((c: any) => c.name),
-    )
-
-    // If collections are empty or don't include restaurants, manually add it
-    const collectionNames = collections.map((collection: any) => collection.name)
-
-    if (!collectionNames.includes("restaurants")) {
-      console.log("Adding 'restaurants' to collection list")
-      collectionNames.push("restaurants")
-    }
-
-    return collectionNames
-  } catch (error) {
-    console.error("Error getting collections:", error)
-    // Return restaurants as fallback
-    return ["restaurants"]
-  }
-}
-
-// Add this function to debug collection contents
-export async function debugCollection(collectionName: string) {
-  try {
-    const { db } = await connectToDatabase()
-    const collection = db.collection(collectionName)
-
-    // Get sample data
-    const sampleData = await collection.find().limit(1).toArray()
-    console.log(`Sample data from ${collectionName}:`, JSON.stringify(sampleData))
-
-    // Get count
-    const count = await collection.countDocuments()
-    console.log(`Total documents in ${collectionName}: ${count}`)
-
-    return { sampleData, count }
-  } catch (error) {
-    console.error(`Error debugging collection ${collectionName}:`, error)
-    return { sampleData: [], count: 0 }
-  }
-}
-
-// Update getBusinessData to include debugging
 export async function getBusinessData(collectionName: string, page = 1, limit = 50, searchTerm = "") {
   try {
     const { db } = await connectToDatabase()
     const collection = db.collection(collectionName)
 
-    // Debug collection first
-    await debugCollection(collectionName)
-
-    // Create search query - make it more lenient
+    // Build query
     const query: any = {}
-
-    // Add search term if provided
     if (searchTerm) {
       query.$or = [
         { businessname: { $regex: searchTerm, $options: "i" } },
@@ -108,20 +50,32 @@ export async function getBusinessData(collectionName: string, page = 1, limit = 
       ]
     }
 
-    console.log("MongoDB Query:", JSON.stringify(query))
+    console.log(`MongoDB Query: ${JSON.stringify(query)}`)
 
-    // Get total count for pagination
-    const total = await await collection.countDocuments(query)
+    // Get total count
+    const total = await collection.countDocuments(query)
     console.log(`Total documents matching query: ${total}`)
 
-    // Get paginated data
+    // Calculate pagination
     const skip = (page - 1) * limit
-    const data = await collection.find(query).sort({ scraped_at: -1 }).skip(skip).limit(limit).toArray()
+    const totalPages = Math.ceil(total / limit)
+
+    // Get data
+    const data = await collection.find(query).sort({ businessname: 1 }).skip(skip).limit(limit).toArray()
+
     console.log(`Retrieved ${data.length} documents`)
 
-    // Log first document structure if available
+    // Sample data for debugging
     if (data.length > 0) {
-      console.log("First document fields:", Object.keys(data[0]))
+      console.log(`Sample document: ${JSON.stringify(data[0])}`)
+    } else {
+      // Check if collection exists and has documents
+      const sampleData = await collection.find({}).limit(1).toArray()
+      console.log(`Sample data from ${collectionName}: ${JSON.stringify(sampleData)}`)
+
+      // Count total documents in collection
+      const totalDocs = await collection.countDocuments({})
+      console.log(`Total documents in ${collectionName}: ${totalDocs}`)
     }
 
     return {
@@ -130,12 +84,11 @@ export async function getBusinessData(collectionName: string, page = 1, limit = 
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages,
       },
     }
   } catch (error) {
     console.error("Error in getBusinessData:", error)
-    // Return empty data instead of throwing
     return {
       data: [],
       pagination: {
@@ -154,7 +107,7 @@ export async function getCollectionStats(collectionName: string) {
     const collection = db.collection(collectionName)
 
     // Get total records
-    const totalRecords = await collection.countDocuments()
+    const totalRecords = await collection.countDocuments({})
 
     // Get records with email
     const recordsWithEmail = await collection.countDocuments({
@@ -169,48 +122,24 @@ export async function getCollectionStats(collectionName: string) {
     // Get unique subsectors
     const uniqueSubsectors = await collection.distinct("subsector")
 
-    // Get average stars - handle potential errors
-    let avgStars = "0.0"
-    try {
-      const starsAggregation = await collection
-        .aggregate([
-          {
-            $match: {
-              stars: {
-                $exists: true,
-                $ne: "",
-                $ne: "N/A",
-                $type: "string",
-                $regex: /^[0-9.]+$/, // Only match numeric strings
-              },
-            },
+    // Get average stars
+    const starsAggregation = await collection
+      .aggregate([
+        {
+          $match: {
+            stars: { $exists: true, $ne: "" },
           },
-          {
-            $addFields: {
-              numericStars: {
-                $convert: {
-                  input: "$stars",
-                  to: "double",
-                  onError: 0,
-                },
-              },
-            },
+        },
+        {
+          $group: {
+            _id: null,
+            avgStars: { $avg: { $toDouble: "$stars" } },
           },
-          {
-            $group: {
-              _id: null,
-              avgStars: { $avg: "$numericStars" },
-            },
-          },
-        ])
-        .toArray()
+        },
+      ])
+      .toArray()
 
-      avgStars = starsAggregation.length > 0 ? starsAggregation[0].avgStars.toFixed(1) : "0.0"
-    } catch (error) {
-      console.error("Error calculating average stars:", error)
-      // Default value if calculation fails
-      avgStars = "0.0"
-    }
+    const avgStars = starsAggregation.length > 0 ? starsAggregation[0].avgStars.toFixed(1) : "0.0"
 
     return {
       totalRecords,
@@ -221,7 +150,6 @@ export async function getCollectionStats(collectionName: string) {
     }
   } catch (error) {
     console.error("Error in getCollectionStats:", error)
-    // Return default stats instead of throwing
     return {
       totalRecords: 0,
       recordsWithEmail: 0,
@@ -229,5 +157,30 @@ export async function getCollectionStats(collectionName: string) {
       uniqueSubsectors: 0,
       avgStars: "0.0",
     }
+  }
+}
+
+export async function getCollections() {
+  try {
+    const { db } = await connectToDatabase()
+    console.log("Fetching collections from MongoDB")
+
+    // Get all collections
+    const collections = await db.listCollections().toArray()
+    const collectionNames = collections.map((collection) => collection.name)
+
+    console.log(`Available collections: ${JSON.stringify(collectionNames)}`)
+
+    // If restaurants is not in the list, add it
+    if (!collectionNames.includes("restaurants")) {
+      console.log("Adding 'restaurants' to collection list")
+      collectionNames.push("restaurants")
+    }
+
+    console.log(`Collections retrieved: ${JSON.stringify(collectionNames)}`)
+    return collectionNames
+  } catch (error) {
+    console.error("Error in getCollections:", error)
+    return ["restaurants"]
   }
 }
