@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Navbar from "@/components/layout/Navbar"
-import styles from "@/styles/ScraperControlPanel.module.css"
+import styles from "@/styles/layout/AppLayout.module.css"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -12,7 +12,7 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children, activeTab }: AppLayoutProps) {
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
   // Check if localStorage is available (client-side)
   useEffect(() => {
@@ -29,6 +29,7 @@ export default function AppLayout({ children, activeTab }: AppLayoutProps) {
   // Update localStorage when theme changes
   useEffect(() => {
     localStorage.setItem("theme", isDarkMode ? "dark" : "light")
+    document.body.className = isDarkMode ? "dark-theme" : "light-theme"
   }, [isDarkMode])
 
   // Toggle theme
@@ -37,8 +38,7 @@ export default function AppLayout({ children, activeTab }: AppLayoutProps) {
   }
 
   return (
-    <div className={`${styles.container} ${isDarkMode ? styles.darkTheme : styles.lightTheme}`}>
-      <div className={styles.gradientBackground}></div>
+    <div className={styles.container}>
       <div className={styles.panel}>
         <Navbar activeTab={activeTab} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
         <div className={styles.contentArea}>{children}</div>
