@@ -1,0 +1,54 @@
+:root {
+  /* Color Variables */
+  --primary-gradient-start: rgba(76, 0, 255, 0.9);
+  --primary-gradient-end: rgba(255, 0, 128, 0.9);
+  --primary-gradient-start-light: rgba(76, 0, 255, 0.7);
+  --primary-gradient-end-light: rgba(255, 0, 128, 0.7);
+
+  /* Dark Theme Colors */
+  --dark-bg: #000000;
+  --dark-panel-bg: rgba(20, 20, 20, 0.8);
+  --dark-card-bg: rgba(30, 30, 30, 0.7);
+  --dark-input-bg: rgba(40, 40, 40, 0.7);
+  --dark-border: rgba(255, 255, 255, 0.1);
+  --dark-text: #ffffff;
+  --dark-text-secondary: rgba(255, 255, 255, 0.7);
+
+  /* Light Theme Colors */
+  --light-bg: #f5f5f5;
+  --light-panel-bg: rgba(255, 255, 255, 0.85);
+  --light-card-bg: rgba(255, 255, 255, 0.9);
+  --light-input-bg: rgba(240, 240, 240, 0.9);
+  --light-border: rgba(0, 0, 0, 0.05);
+  --light-text: #333333;
+  --light-text-secondary: rgba(0, 0, 0, 0.6);
+
+  /* Accent Colors */
+  --success: #4caf50;
+  --warning: #ff9800;
+  --error: #f44336;
+  --info: #2196f3;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
