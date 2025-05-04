@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb"
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const MONGODB_DB = process.env.MONGODB_DB || "scraper_db"
+const MONGODB_DB = process.env.MONGODB_DB || "Leeds"
 
 // Check if we're in production
 const isProd = process.env.NODE_ENV === "production"
@@ -17,6 +17,7 @@ export async function connectToDatabase() {
     }
 
     console.log("Connecting to MongoDB:", MONGODB_URI)
+    console.log("Using database:", MONGODB_DB)
 
     // Create a new MongoDB client
     const client = new MongoClient(MONGODB_URI)
@@ -44,20 +45,56 @@ export async function getCollections() {
     const { db } = await connectToDatabase()
     const collections = await db.listCollections().toArray()
 
-    // Filter out the subsector_queue collection
-    return collections
-      .filter((collection: any) => collection.name !== "subsector_queue")
-      .map((collection: any) => collection.name)
+    console.log(
+      "Available collections:",
+      collections.map((c: any) => c.name),
+    )
+
+    // If collections are empty or don't include restaurants, manually add it
+    const collectionNames = collections.map((collection: any) => collection.name)
+
+    if (!collectionNames.includes("restaurants")) {
+      console.log("Adding 'restaurants' to collection list")
+      collectionNames.push("restaurants")
+    }
+
+    return collectionNames
   } catch (error) {
     console.error("Error getting collections:", error)
-    return []
+    // Return restaurants as fallback
+    return ["restaurants"]
   }
 }
 
+// Add this function to debug collection contents
+export async function debugCollection(collectionName: string) {
+  try {
+    const { db } = await connectToDatabase()
+    const collection = db.collection(collectionName)
+
+    // Get sample data
+    const sampleData = await collection.find().limit(1).toArray()
+    console.log(`Sample data from ${collectionName}:`, JSON.stringify(sampleData))
+
+    // Get count
+    const count = await collection.countDocuments()
+    console.log(`Total documents in ${collectionName}: ${count}`)
+
+    return { sampleData, count }
+  } catch (error) {
+    console.error(`Error debugging collection ${collectionName}:`, error)
+    return { sampleData: [], count: 0 }
+  }
+}
+
+// Update getBusinessData to include debugging
 export async function getBusinessData(collectionName: string, page = 1, limit = 50, searchTerm = "") {
   try {
     const { db } = await connectToDatabase()
     const collection = db.collection(collectionName)
+
+    // Debug collection first
+    await debugCollection(collectionName)
 
     // Create search query - make it more lenient
     const query: any = {}
@@ -74,13 +111,18 @@ export async function getBusinessData(collectionName: string, page = 1, limit = 
     console.log("MongoDB Query:", JSON.stringify(query))
 
     // Get total count for pagination
-    const total = await collection.countDocuments(query)
+    const total = await await collection.countDocuments(query)
     console.log(`Total documents matching query: ${total}`)
 
     // Get paginated data
     const skip = (page - 1) * limit
     const data = await collection.find(query).sort({ scraped_at: -1 }).skip(skip).limit(limit).toArray()
     console.log(`Retrieved ${data.length} documents`)
+
+    // Log first document structure if available
+    if (data.length > 0) {
+      console.log("First document fields:", Object.keys(data[0]))
+    }
 
     return {
       data,
