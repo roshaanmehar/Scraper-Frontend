@@ -132,14 +132,42 @@ export async function getCollectionStats(collectionName: string) {
     try {
       const starsAggregation = await collection
         .aggregate([
-          { $match: { stars: { $exists: true, $ne: "" } } },
-          { $group: { _id: null, avgStars: { $avg: { $toDouble: "$stars" } } } },
+          {
+            $match: {
+              stars: {
+                $exists: true,
+                $ne: "",
+                $ne: "N/A",
+                $type: "string",
+                $regex: /^[0-9.]+$/, // Only match numeric strings
+              },
+            },
+          },
+          {
+            $addFields: {
+              numericStars: {
+                $convert: {
+                  input: "$stars",
+                  to: "double",
+                  onError: 0,
+                },
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              avgStars: { $avg: "$numericStars" },
+            },
+          },
         ])
         .toArray()
 
       avgStars = starsAggregation.length > 0 ? starsAggregation[0].avgStars.toFixed(1) : "0.0"
     } catch (error) {
       console.error("Error calculating average stars:", error)
+      // Default value if calculation fails
+      avgStars = "0.0"
     }
 
     return {
