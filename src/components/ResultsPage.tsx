@@ -11,13 +11,15 @@ interface Business {
   _id: string
   businessname: string
   address: string
-  phonenumber: string
+  phonenumber: string | number
   website: string
   email: string[] | string
   stars: string
   subsector: string
-  scraped_at: string
+  scraped_at: string | { $date: string }
   numberofreviews?: number
+  emailstatus?: string
+  emailscraped_at?: string | { $date: string }
 }
 
 interface CollectionStats {
@@ -30,7 +32,7 @@ interface CollectionStats {
 
 export default function ResultsPage() {
   const [collections, setCollections] = useState<string[]>([])
-  const [selectedCollection, setSelectedCollection] = useState<string>("")
+  const [selectedCollection, setSelectedCollection] = useState<string>("restaurants")
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [stats, setStats] = useState<CollectionStats | null>(null)
   const [searchTerm, setSearchTerm] = useState("")

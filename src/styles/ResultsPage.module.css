@@ -275,26 +275,30 @@
 
 .helpText {
   margin-top: 1rem;
-  text-align: left;
   font-size: 0.9rem;
   color: #666;
 }
 
 .helpText ul {
   margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding-left: 1.5rem;
+  margin-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.helpText li {
+  margin-bottom: 0.25rem;
 }
 
 .testLink {
   display: inline-block;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   padding: 0.5rem 1rem;
   background-color: #f0f0f0;
-  border-radius: 4px;
   color: #333;
+  border-radius: 4px;
   text-decoration: none;
   font-weight: 500;
+  transition: background-color 0.2s;
 }
 
 .testLink:hover {
