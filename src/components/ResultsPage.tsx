@@ -48,11 +48,25 @@ export default function ResultsPage() {
 
         if (data.collections && data.collections.length > 0) {
           setCollections(data.collections)
-          setSelectedCollection(data.collections[0])
+
+          // Set restaurants as the default collection if it exists
+          if (data.collections.includes("restaurants")) {
+            setSelectedCollection("restaurants")
+          } else {
+            setSelectedCollection(data.collections[0])
+          }
+        } else {
+          // Fallback to restaurants if no collections returned
+          setCollections(["restaurants"])
+          setSelectedCollection("restaurants")
         }
       } catch (err) {
         console.error("Failed to fetch collections:", err)
         setError("Failed to fetch collections")
+
+        // Fallback to restaurants on error
+        setCollections(["restaurants"])
+        setSelectedCollection("restaurants")
       }
     }
 
