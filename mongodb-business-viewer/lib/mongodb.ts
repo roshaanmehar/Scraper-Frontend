@@ -46,8 +46,10 @@ export async function getBusinessData(collectionName: string, page = 1, limit = 
   const collection = db.collection(collectionName)
 
   // Create search query - only include records with email
+  // Let's modify this to be more lenient for testing
   const query: any = {
-    email: { $exists: true, $ne: [] }, // Only get records with emails
+    // Temporarily remove this constraint to see if we get any data
+    // email: { $exists: true, $ne: [] },
   }
 
   // Add search term if provided
@@ -59,12 +61,16 @@ export async function getBusinessData(collectionName: string, page = 1, limit = 
     ]
   }
 
+  console.log("MongoDB Query:", JSON.stringify(query))
+
   // Get total count for pagination
   const total = await collection.countDocuments(query)
+  console.log(`Total documents matching query: ${total}`)
 
   // Get paginated data
   const skip = (page - 1) * limit
   const data = await collection.find(query).sort({ scraped_at: -1 }).skip(skip).limit(limit).toArray()
+  console.log(`Retrieved ${data.length} documents`)
 
   return {
     data,
