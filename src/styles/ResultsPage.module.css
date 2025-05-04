@@ -99,26 +99,44 @@
   background: #555;
 }
 
+.exportContainer {
+  position: relative;
+}
+
+.spinnerIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .exportButton {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 8px;
+  background-color: #4a5568;
+  color: white;
+  border: none;
   border-radius: 4px;
-  background: #333;
-  border: 1px solid #333;
-  color: #fff;
-  font-size: 0.9rem;
+  padding: 8px 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 
-.exportButton:hover {
-  background: #555;
+.exportButton:hover:not(:disabled) {
+  background-color: #2d3748;
 }
 
 .exportButton:disabled {
-  opacity: 0.5;
+  background-color: #a0aec0;
   cursor: not-allowed;
 }
 
