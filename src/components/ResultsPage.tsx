@@ -57,6 +57,7 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null)
   const [sortField, setSortField] = useState<SortField>("businessname")
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
+  const [exportStatus, setExportStatus] = useState<string | null>(null)
 
   // Fetch collections on component mount
   useEffect(() => {
@@ -217,6 +218,7 @@ export default function ResultsPage() {
   // Export data as CSV
   const exportToCSV = async () => {
     setIsLoading(true)
+    setExportStatus("Fetching data...")
     try {
       // Fetch all data for the selected collection (no pagination)
       const response = await fetch(
@@ -228,53 +230,96 @@ export default function ResultsPage() {
       }
 
       const data = await response.json()
+      setExportStatus("Processing data...")
 
       if (data.data && Array.isArray(data.data)) {
         // Filter businesses with valid emails
         const businessesWithEmail = data.data.filter((business) => isValidEmail(business.email))
+
+        if (businessesWithEmail.length === 0) {
+          setExportStatus("No data to export")
+          setTimeout(() => setExportStatus(null), 3000)
+          return
+        }
+
+        setExportStatus("Creating CSV...")
         exportBusinessesToCSV(businessesWithEmail)
       }
     } catch (err) {
       console.error("Failed to export data:", err)
       setError("Failed to export data")
+      setExportStatus("Export failed")
+      setTimeout(() => setExportStatus(null), 3000)
     } finally {
       setIsLoading(false)
     }
   }
 
   const exportBusinessesToCSV = (businesses: Business[]) => {
-    // Create CSV header
-    const header = "Business Name,Address,Phone Number,Website,Email\n"
+    try {
+      // Create CSV header
+      const header = "Business Name,Address,Phone Number,Website,Email\n"
 
-    // Create CSV rows
-    const rows = businesses
-      .map((business: Business) => {
-        const emails = getValidEmails(business.email).join("; ")
+      // Create CSV rows
+      const rows = businesses
+        .map((business: Business) => {
+          const emails = getValidEmails(business.email).join("; ")
 
-        return [
-          `"${business.businessname || ""}"`,
-          `"${business.address || ""}"`,
-          `"${business.phonenumber || ""}"`,
-          `"${business.website || ""}"`,
-          `"${emails || ""}"`,
-        ].join(",")
-      })
-      .join("\n")
+          return [
+            `"${(business.businessname || "").replace(/"/g, '""')}"`,
+            `"${(business.address || "").replace(/"/g, '""')}"`,
+            `"${(business.phonenumber || "").toString().replace(/"/g, '""')}"`,
+            `"${(business.website || "").replace(/"/g, '""')}"`,
+            `"${emails.replace(/"/g, '""')}"`,
+          ].join(",")
+        })
+        .join("\n")
 
-    // Create and download CSV file
-    const csvContent = header + rows
-    downloadCSV(csvContent, `${selectedCollection}_data.csv`)
+      // Create and download CSV file
+      const csvContent = header + rows
+      setExportStatus("Downloading...")
+      downloadCSV(csvContent, `${selectedCollection}_data.csv`)
+
+      // Show success message
+      setExportStatus("Export successful!")
+      setTimeout(() => setExportStatus(null), 3000)
+    } catch (error) {
+      console.error("Error creating CSV:", error)
+      setExportStatus("Export failed")
+      setTimeout(() => setExportStatus(null), 3000)
+    }
   }
 
   const downloadCSV = (csvContent: string, filename: string) => {
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.setAttribute("download", filename)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    try {
+      console.log("Creating blob for download")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      console.log("Blob created:", blob.size, "bytes")
+
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      console.log("URL created:", url)
+
+      const link = document.createElement("a")
+      link.href = url
+      link.setAttribute("download", filename)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+
+      console.log("Triggering download")
+      link.click()
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        console.log("Download cleanup complete")
+      }, 100)
+    } catch (error) {
+      console.error("Download error:", error)
+      setExportStatus("Download failed")
+      setTimeout(() => setExportStatus(null), 3000)
+    }
   }
 
   return (
@@ -316,14 +361,20 @@ export default function ResultsPage() {
               </button>
             </form>
 
-            <button
-              className={styles.exportButton}
-              onClick={exportToCSV}
-              disabled={isLoading || businesses.length === 0}
-            >
-              <Download size={18} />
-              <span>Export</span>
-            </button>
+            <div className={styles.exportContainer}>
+              <button
+                className={styles.exportButton}
+                onClick={exportToCSV}
+                disabled={isLoading || businesses.length === 0}
+              >
+                {isLoading && exportStatus ? (
+                  <Loader size={18} className={styles.spinnerIcon} />
+                ) : (
+                  <Download size={18} />
+                )}
+                <span>{exportStatus || "Export"}</span>
+              </button>
+            </div>
           </div>
         </div>
 
