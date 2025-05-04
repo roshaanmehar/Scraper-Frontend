@@ -3,8 +3,9 @@ import { getBusinessData, getCollectionStats } from "@/lib/mongodb"
 
 export async function GET(request: NextRequest, { params }: { params: { collection: string } }) {
   try {
-    // Fix: Ensure params.collection is properly handled
-    const collection = await Promise.resolve(params.collection)
+    // Fix: Use params.collection directly without Promise.resolve
+    // Next.js App Router already handles this correctly
+    const collection = params.collection
     const searchParams = request.nextUrl.searchParams
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "50")
