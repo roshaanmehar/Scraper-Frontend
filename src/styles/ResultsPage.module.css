@@ -265,16 +265,40 @@
 }
 
 .noResults {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.helpText {
+  margin-top: 1rem;
+  text-align: left;
+  font-size: 0.9rem;
   color: #666;
-  font-style: italic;
-  grid-column: 1 / -1;
-  background: #fff;
+}
+
+.helpText ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+.testLink {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #f0f0f0;
   border-radius: 4px;
-  border: 1px solid #ddd;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.testLink:hover {
+  background-color: #e0e0e0;
 }
 
 .pagination {
