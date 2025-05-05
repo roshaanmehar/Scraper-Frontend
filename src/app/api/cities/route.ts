@@ -1,32 +1,42 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { db } = await connectToDatabase()
-    const citiesCollection = db.collection("cities")
-
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
 
-    // Build the query
-    const query = search ? { area_covered: { $regex: search, $options: "i" } } : {}
+    if (!search || search.length < 2) {
+      return NextResponse.json({
+        status: "success",
+        cities: [],
+      })
+    }
 
-    // Fetch cities data
-    const cities = await citiesCollection.find(query).sort({ area_covered: 1 }).limit(50).toArray()
+    const { db } = await connectToDatabase()
+
+    // Create a query to search for cities
+    const query = {
+      area_covered: { $regex: search, $options: "i" },
+    }
+
+    console.log(`Searching cities with query:`, query)
+
+    // Get the cities collection
+    const cities = await db.collection("cities").find(query).limit(10).toArray()
 
     console.log(`Found ${cities.length} cities matching "${search}"`)
 
     return NextResponse.json({
-      cities,
       status: "success",
+      cities,
     })
   } catch (error) {
-    console.error("Error fetching cities data:", error)
+    console.error("Error fetching cities:", error)
     return NextResponse.json(
       {
-        error: "Failed to fetch cities data",
         status: "error",
+        error: "Failed to fetch cities",
       },
       { status: 500 },
     )
