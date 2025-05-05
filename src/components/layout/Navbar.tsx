@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { Database, Search, Sun, Moon } from "lucide-react"
-import { motion } from "framer-motion"
 import styles from "@/styles/layout/Navbar.module.css"
 
 interface NavbarProps {
@@ -13,19 +12,10 @@ interface NavbarProps {
 
 export default function Navbar({ activeTab, isDarkMode, toggleTheme }: NavbarProps) {
   return (
-    <motion.div
-      className={styles.navbar}
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <motion.div
-        className={styles.navbarBrand}
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-      >
+    <div className={`${styles.navbar} ${styles.animateNavbar}`}>
+      <div className={`${styles.navbarBrand} ${styles.animateBrand}`}>
         <h1 className={styles.title}>GMB Scraper</h1>
-      </motion.div>
+      </div>
 
       <div className={styles.navTabs}>
         <Link href="/" className={`${styles.navTab} ${activeTab === "home" ? styles.activeNavTab : ""}`}>
@@ -40,16 +30,14 @@ export default function Navbar({ activeTab, isDarkMode, toggleTheme }: NavbarPro
       </div>
 
       <div className={styles.navActions}>
-        <motion.button
-          className={styles.themeToggle}
+        <button
+          className={`${styles.themeToggle} ${styles.animateButton}`}
           onClick={toggleTheme}
           aria-label="Toggle theme"
-          whileHover={{ scale: 1.2 }}
-          whileTap={{ scale: 0.9 }}
         >
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </motion.button>
+        </button>
       </div>
-    </motion.div>
+    </div>
   )
 }
