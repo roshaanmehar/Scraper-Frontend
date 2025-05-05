@@ -54,19 +54,24 @@ export async function getRestaurants(page = 1, limit = 6) {
 
     const db = client.db("Leeds") // Database name specified here
 
+    // Only fetch restaurants that have emails
+    const filter = {
+      email: { $exists: true, $ne: [] },
+    }
+
     // Calculate skip value for pagination
     const skip = (page - 1) * limit
 
-    console.log(`Fetching restaurants with skip=${skip}, limit=${limit}`)
+    console.log(`Fetching restaurants with emails, skip=${skip}, limit=${limit}`)
 
     // Get total count for pagination
-    const totalCount = await db.collection("restaurants").countDocuments()
-    console.log(`Total restaurants: ${totalCount}`)
+    const totalCount = await db.collection("restaurants").countDocuments(filter)
+    console.log(`Total restaurants with emails: ${totalCount}`)
 
     // Fetch restaurants with pagination
     const restaurants = await db
       .collection("restaurants")
-      .find({})
+      .find(filter)
       .sort({ scraped_at: -1 }) // Sort by most recently scraped
       .skip(skip)
       .limit(limit)
@@ -118,13 +123,18 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
     }
 
     // Create search filter with improved phone number search
+    // Only include restaurants that have emails
     const filter = {
-      $or: [
-        { businessname: { $regex: query, $options: "i" } },
-        { address: { $regex: query, $options: "i" } },
-        ...(phoneQuery !== null ? [{ phonenumber: phoneQuery }] : []),
-        { email: { $regex: query, $options: "i" } },
-        { subsector: { $regex: query, $options: "i" } },
+      $and: [
+        { email: { $exists: true, $ne: [] } },
+        {
+          $or: [
+            { businessname: { $regex: query, $options: "i" } },
+            ...(phoneQuery !== null ? [{ phonenumber: phoneQuery }] : []),
+            { email: { $regex: query, $options: "i" } },
+            { subsector: { $regex: query, $options: "i" } },
+          ],
+        },
       ],
     }
 
@@ -135,7 +145,7 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
 
     // Get total count for pagination
     const totalCount = await db.collection("restaurants").countDocuments(filter)
-    console.log(`Found ${totalCount} matching restaurants`)
+    console.log(`Found ${totalCount} matching restaurants with emails`)
 
     // Fetch restaurants with pagination
     const restaurants = await db
