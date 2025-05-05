@@ -34,30 +34,56 @@ export async function GET(request: NextRequest) {
     try {
       const { db } = await connectToDatabase()
 
-      // First try a prefix search for faster results (starts with)
-      const prefixQuery = {
-        area_covered: {
-          $regex: `^${search}`,
-          $options: "i", // Case-insensitive
-        },
+      // Log the database and collection we're using
+      console.log(`Using database: ${db.databaseName}, searching in 'cities' collection`)
+
+      // Get a count of documents in the collection
+      const count = await db.collection("cities").countDocuments()
+      console.log(`Total documents in cities collection: ${count}`)
+
+      // Try different field names in case the schema is different
+      const query = {
+        $or: [
+          // Try different possible field names for city names
+          { area_covered: { $regex: `^${search}`, $options: "i" } },
+          { name: { $regex: `^${search}`, $options: "i" } },
+          { city: { $regex: `^${search}`, $options: "i" } },
+          { city_name: { $regex: `^${search}`, $options: "i" } },
+        ],
       }
 
-      let cities = await db.collection("cities").find(prefixQuery).sort({ area_covered: 1 }).limit(10).toArray()
+      console.log("Search query:", JSON.stringify(query))
+
+      let cities = await db.collection("cities").find(query).sort({ area_covered: 1 }).limit(10).toArray()
 
       // If no results with prefix search, try a contains search
       if (cities.length === 0) {
         const containsQuery = {
-          area_covered: {
-            $regex: search,
-            $options: "i", // Case-insensitive
-          },
+          $or: [
+            { area_covered: { $regex: search, $options: "i" } },
+            { name: { $regex: search, $options: "i" } },
+            { city: { $regex: search, $options: "i" } },
+            { city_name: { $regex: search, $options: "i" } },
+          ],
         }
 
+        console.log("Fallback contains query:", JSON.stringify(containsQuery))
         cities = await db.collection("cities").find(containsQuery).sort({ area_covered: 1 }).limit(10).toArray()
       }
 
       const endTime = performance.now()
       console.log(`Found ${cities.length} cities matching "${search}" in ${(endTime - startTime).toFixed(2)}ms`)
+
+      if (cities.length > 0) {
+        console.log("Sample result:", JSON.stringify(cities[0]))
+      } else {
+        // If still no results, let's check what fields are available in the documents
+        const sampleCity = await db.collection("cities").findOne()
+        if (sampleCity) {
+          console.log("Available fields in city documents:", Object.keys(sampleCity))
+          console.log("Sample document:", JSON.stringify(sampleCity))
+        }
+      }
 
       // Cache the results for future requests
       cityCache.set(cacheKey, cities)
