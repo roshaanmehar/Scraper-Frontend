@@ -1,21 +1,6 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
-import {
-  Download,
-  Search,
-  MapPin,
-  Phone,
-  Globe,
-  Mail,
-  Loader,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  AlertCircle,
-} from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/ResultsPage.module.css"
 
@@ -42,11 +27,8 @@ interface CollectionStats {
   avgStars: string
 }
 
-type SortField = "businessname" | "stars" | "numberofreviews" | "scraped_at"
-type SortOrder = "asc" | "desc"
-
 export default function ResultsPage() {
-  const [collections, setCollections] = useState<string[]>([])
+  const [collections, setCollections] = useState<string[]>(["restaurants"])
   const [selectedCollection, setSelectedCollection] = useState<string>("restaurants")
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [stats, setStats] = useState<CollectionStats | null>(null)
@@ -55,46 +37,6 @@ export default function ResultsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sortField, setSortField] = useState<SortField>("businessname")
-  const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
-  const [exportStatus, setExportStatus] = useState<string | null>(null)
-
-  // Fetch collections on component mount
-  useEffect(() => {
-    const fetchCollections = async () => {
-      try {
-        const response = await fetch("/api/collections")
-        const data = await response.json()
-
-        if (data.collections && data.collections.length > 0) {
-          // Filter out subsector_queue from collections
-          const filteredCollections = data.collections.filter((collection: string) => collection !== "subsector_queue")
-
-          setCollections(filteredCollections)
-
-          // Set restaurants as the default collection if it exists
-          if (filteredCollections.includes("restaurants")) {
-            setSelectedCollection("restaurants")
-          } else if (filteredCollections.length > 0) {
-            setSelectedCollection(filteredCollections[0])
-          }
-        } else {
-          // Fallback to restaurants if no collections returned
-          setCollections(["restaurants"])
-          setSelectedCollection("restaurants")
-        }
-      } catch (err) {
-        console.error("Failed to fetch collections:", err)
-        setError("Failed to fetch collections")
-
-        // Fallback to restaurants on error
-        setCollections(["restaurants"])
-        setSelectedCollection("restaurants")
-      }
-    }
-
-    fetchCollections()
-  }, [])
 
   // Fetch businesses when collection changes or search/page changes
   useEffect(() => {
@@ -107,7 +49,7 @@ export default function ResultsPage() {
       try {
         console.log(`Fetching businesses from ${selectedCollection}, page ${currentPage}`)
         const response = await fetch(
-          `/api/businesses/${selectedCollection}?page=${currentPage}&search=${encodeURIComponent(searchTerm)}&sortField=${sortField}&sortOrder=${sortOrder}`,
+          `/api/businesses/${selectedCollection}?page=${currentPage}&search=${encodeURIComponent(searchTerm)}`,
         )
 
         if (!response.ok) {
@@ -123,18 +65,7 @@ export default function ResultsPage() {
         }
 
         if (data.data && Array.isArray(data.data)) {
-          // Filter out any businesses without valid emails (extra safety check)
-          const validBusinesses = data.data.filter((business) => {
-            if (!business.email) return false
-
-            if (Array.isArray(business.email)) {
-              return business.email.length > 0 && business.email.some((e) => e && e !== "N/A")
-            }
-
-            return business.email && business.email !== "N/A" && business.email !== ""
-          })
-
-          setBusinesses(validBusinesses)
+          setBusinesses(data.data)
           setTotalPages(data.pagination.totalPages)
           setStats(data.stats)
         }
@@ -147,7 +78,7 @@ export default function ResultsPage() {
     }
 
     fetchBusinesses()
-  }, [selectedCollection, currentPage, searchTerm, sortField, sortOrder])
+  }, [selectedCollection, currentPage, searchTerm])
 
   // Handle collection change
   const handleCollectionChange = (collection: string) => {
@@ -164,29 +95,6 @@ export default function ResultsPage() {
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
-  }
-
-  // Handle sort field change
-  const handleSortFieldChange = (field: SortField) => {
-    if (field === sortField) {
-      // Toggle sort order if clicking the same field
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-    } else {
-      // Set new field and default to ascending
-      setSortField(field)
-      setSortOrder("asc")
-    }
-    setCurrentPage(1)
-  }
-
-  // Get sort icon
-  const getSortIcon = (field: SortField) => {
-    if (field !== sortField) return <ArrowUpDown size={16} className={styles.sortIcon} />
-    return sortOrder === "asc" ? (
-      <ArrowUp size={16} className={styles.sortIcon} />
-    ) : (
-      <ArrowDown size={16} className={styles.sortIcon} />
-    )
   }
 
   // Truncate long URLs
@@ -218,113 +126,6 @@ export default function ResultsPage() {
     return email !== "N/A" && email !== "" ? [email] : []
   }
 
-  // Export data as CSV
-  const exportToCSV = async () => {
-    setIsLoading(true)
-    setExportStatus("Fetching data...")
-    try {
-      // Fetch all data for the selected collection (no pagination)
-      const response = await fetch(
-        `/api/businesses/${selectedCollection}?limit=10000&search=${encodeURIComponent(searchTerm)}&sortField=${sortField}&sortOrder=${sortOrder}`,
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      setExportStatus("Processing data...")
-
-      if (data.data && Array.isArray(data.data)) {
-        // Filter businesses with valid emails
-        const businessesWithEmail = data.data.filter((business) => isValidEmail(business.email))
-
-        if (businessesWithEmail.length === 0) {
-          setExportStatus("No data to export")
-          setTimeout(() => setExportStatus(null), 3000)
-          return
-        }
-
-        setExportStatus("Creating CSV...")
-        exportBusinessesToCSV(businessesWithEmail)
-      }
-    } catch (err) {
-      console.error("Failed to export data:", err)
-      setError("Failed to export data")
-      setExportStatus("Export failed")
-      setTimeout(() => setExportStatus(null), 3000)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const exportBusinessesToCSV = (businesses: Business[]) => {
-    try {
-      // Create CSV header
-      const header = "Business Name,Address,Phone Number,Website,Email\n"
-
-      // Create CSV rows
-      const rows = businesses
-        .map((business: Business) => {
-          const emails = getValidEmails(business.email).join("; ")
-
-          return [
-            `"${(business.businessname || "").replace(/"/g, '""')}"`,
-            `"${(business.address || "").replace(/"/g, '""')}"`,
-            `"${(business.phonenumber || "").toString().replace(/"/g, '""')}"`,
-            `"${(business.website || "").replace(/"/g, '""')}"`,
-            `"${emails.replace(/"/g, '""')}"`,
-          ].join(",")
-        })
-        .join("\n")
-
-      // Create and download CSV file
-      const csvContent = header + rows
-      setExportStatus("Downloading...")
-      downloadCSV(csvContent, `${selectedCollection}_data.csv`)
-
-      // Show success message
-      setExportStatus("Export successful!")
-      setTimeout(() => setExportStatus(null), 3000)
-    } catch (error) {
-      console.error("Error creating CSV:", error)
-      setExportStatus("Export failed")
-      setTimeout(() => setExportStatus(null), 3000)
-    }
-  }
-
-  const downloadCSV = (csvContent: string, filename: string) => {
-    try {
-      console.log("Creating blob for download")
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      console.log("Blob created:", blob.size, "bytes")
-
-      // Create download link
-      const url = URL.createObjectURL(blob)
-      console.log("URL created:", url)
-
-      const link = document.createElement("a")
-      link.href = url
-      link.setAttribute("download", filename)
-      link.style.visibility = "hidden"
-      document.body.appendChild(link)
-
-      console.log("Triggering download")
-      link.click()
-
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-        console.log("Download cleanup complete")
-      }, 100)
-    } catch (error) {
-      console.error("Download error:", error)
-      setExportStatus("Download failed")
-      setTimeout(() => setExportStatus(null), 3000)
-    }
-  }
-
   return (
     <AppLayout activeTab="results">
       <div className={styles.resultsContainer}>
@@ -335,7 +136,7 @@ export default function ResultsPage() {
 
           <div className={styles.resultsActions}>
             <form onSubmit={handleSearch} className={styles.searchBox}>
-              <Search size={18} className={styles.searchIcon} />
+              <span className={styles.searchIcon}>🔍</span>
               <input
                 type="text"
                 placeholder="Search by name, email, or phone..."
@@ -351,21 +152,21 @@ export default function ResultsPage() {
             <div className={styles.exportContainer}>
               <button
                 className={styles.exportButton}
-                onClick={exportToCSV}
+                onClick={() => alert("Export functionality would go here")}
                 disabled={isLoading || businesses.length === 0}
               >
-                {isLoading && exportStatus ? (
-                  <Loader size={18} className={styles.spinnerIcon} />
+                {isLoading ? (
+                  <span className={styles.spinnerIcon}>⟳</span>
                 ) : (
-                  <Download size={18} />
+                  <span>⬇️</span>
                 )}
-                <span>{exportStatus || "Export"}</span>
+                <span>Export</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Collection and Sort Controls */}
+        {/* Collection Selector */}
         <div className={styles.controlsRow}>
           <div className={styles.collectionSelector}>
             <label htmlFor="collection">Collection:</label>
@@ -383,46 +184,12 @@ export default function ResultsPage() {
               ))}
             </select>
           </div>
-
-          <div className={styles.sortControls}>
-            <span className={styles.sortLabel}>Sort by:</span>
-            <div className={styles.sortButtons}>
-              <button
-                className={`${styles.sortButton} ${sortField === "businessname" ? styles.activeSortButton : ""}`}
-                onClick={() => handleSortFieldChange("businessname")}
-                disabled={isLoading}
-              >
-                Name {getSortIcon("businessname")}
-              </button>
-              <button
-                className={`${styles.sortButton} ${sortField === "stars" ? styles.activeSortButton : ""}`}
-                onClick={() => handleSortFieldChange("stars")}
-                disabled={isLoading}
-              >
-                Rating {getSortIcon("stars")}
-              </button>
-              <button
-                className={`${styles.sortButton} ${sortField === "numberofreviews" ? styles.activeSortButton : ""}`}
-                onClick={() => handleSortFieldChange("numberofreviews")}
-                disabled={isLoading}
-              >
-                Reviews {getSortIcon("numberofreviews")}
-              </button>
-              <button
-                className={`${styles.sortButton} ${sortField === "scraped_at" ? styles.activeSortButton : ""}`}
-                onClick={() => handleSortFieldChange("scraped_at")}
-                disabled={isLoading}
-              >
-                Date {getSortIcon("scraped_at")}
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Loading State */}
         {isLoading && (
           <div className={styles.loadingContainer}>
-            <Loader size={40} className={styles.loadingSpinner} />
+            <span className={styles.loadingSpinner}>⟳</span>
             <p>Loading data...</p>
           </div>
         )}
@@ -468,21 +235,21 @@ export default function ResultsPage() {
                         <div className={styles.businessDetails}>
                           {business.address && (
                             <div className={styles.businessDetail}>
-                              <MapPin size={16} />
+                              <span>📍</span>
                               <span>{business.address}</span>
                             </div>
                           )}
 
                           {business.phonenumber && (
                             <div className={styles.businessDetail}>
-                              <Phone size={16} />
+                              <span>📞</span>
                               <span>{business.phonenumber}</span>
                             </div>
                           )}
 
                           {business.website && business.website !== "N/A" && (
                             <div className={styles.businessDetail}>
-                              <Globe size={16} />
+                              <span>🌐</span>
                               <a href={business.website} target="_blank" rel="noopener noreferrer">
                                 {truncateUrl(business.website)}
                               </a>
@@ -491,7 +258,7 @@ export default function ResultsPage() {
 
                           {validEmails.length > 0 && (
                             <div className={styles.businessDetail}>
-                              <Mail size={16} />
+                              <span>✉️</span>
                               <div className={styles.emailList}>
                                 {validEmails.map((email, idx) => (
                                   <a key={idx} href={`mailto:${email}`} className={styles.emailItem}>
@@ -510,7 +277,7 @@ export default function ResultsPage() {
                 <div className={styles.noResults}>
                   <p>No businesses with valid email addresses found in the "{selectedCollection}" collection.</p>
                   <div className={styles.helpText}>
-                    <AlertCircle size={20} className={styles.alertIcon} />
+                    <span>⚠️</span>
                     <div>
                       Please check that:
                       <ul>
