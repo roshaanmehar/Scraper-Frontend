@@ -3,11 +3,11 @@ import { MongoClient, type Db } from "mongodb"
 // Connection URL
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
 
-// We'll try both database names to ensure we find the right one
-// The user mentioned they have a database named "cities" with a collection "cities"
-// But the logs show we're not finding data, so let's check both possibilities
-const PRIMARY_DB = "cities"
-const FALLBACK_DB = "Leeds"
+// Based on the MongoDB Compass screenshot, the correct path is:
+// Local > Cities > cities
+const DATABASE_NAME = "Local"
+const SUB_DATABASE = "Cities"
+const COLLECTION_NAME = "cities"
 
 // Global caches for city search
 export const cityCache = new Map<string, any[]>()
@@ -32,7 +32,6 @@ const POPULAR_CITIES = [
 let cachedClient: MongoClient | null = null
 let cachedDb: Db | null = null
 let isOptimized = false
-let correctDatabaseName = PRIMARY_DB // Will be updated if we find the correct DB
 
 export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
   // If we already have a connection, use it
@@ -46,40 +45,23 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     // Connect to MongoDB
     const client = await MongoClient.connect(MONGODB_URI)
 
-    // First try the primary database name
-    let db = client.db(correctDatabaseName)
+    // Connect to the correct database based on the screenshot
+    const db = client.db(DATABASE_NAME).db(SUB_DATABASE)
 
-    // Check if the cities collection exists in this database
-    const collections = await db.listCollections({ name: "cities" }).toArray()
-
-    // If cities collection doesn't exist in the primary DB, try the fallback
-    if (collections.length === 0 && correctDatabaseName === PRIMARY_DB) {
-      console.log(`Collection 'cities' not found in database '${PRIMARY_DB}', trying '${FALLBACK_DB}'`)
-      db = client.db(FALLBACK_DB)
-      const fallbackCollections = await db.listCollections({ name: "cities" }).toArray()
-
-      if (fallbackCollections.length > 0) {
-        console.log(`Found 'cities' collection in database '${FALLBACK_DB}'`)
-        correctDatabaseName = FALLBACK_DB
-      } else {
-        console.warn(`'cities' collection not found in either '${PRIMARY_DB}' or '${FALLBACK_DB}'`)
-      }
-    }
+    console.log(`Connected to MongoDB database path: ${DATABASE_NAME} > ${SUB_DATABASE}`)
 
     // Cache the connection
     cachedClient = client
     cachedDb = db
 
-    console.log(`Connected to MongoDB database: ${correctDatabaseName}`)
-
     // Check if the cities collection has any documents
-    const cityCount = await db.collection("cities").countDocuments()
-    console.log(`Found ${cityCount} documents in the 'cities' collection`)
+    const cityCount = await db.collection(COLLECTION_NAME).countDocuments()
+    console.log(`Found ${cityCount} documents in the '${COLLECTION_NAME}' collection`)
 
     // Get a sample document to check the structure
     if (cityCount > 0) {
-      const sampleCity = await db.collection("cities").findOne()
-      console.log("Sample city document structure:", JSON.stringify(sampleCity))
+      const sampleCity = await db.collection(COLLECTION_NAME).findOne()
+      console.log("Sample city document:", JSON.stringify(sampleCity))
     }
 
     // Run optimization in the background
@@ -103,18 +85,18 @@ async function optimizeDatabaseInBackground(db: Db) {
     console.log("Starting background database optimization...")
 
     // Check if cities collection exists
-    const collections = await db.listCollections({ name: "cities" }).toArray()
+    const collections = await db.listCollections({ name: COLLECTION_NAME }).toArray()
 
     if (collections.length === 0) {
-      console.warn("Warning: 'cities' collection does not exist in the database")
+      console.warn(`Warning: '${COLLECTION_NAME}' collection does not exist in the database`)
       return
     }
 
     // Create indexes for faster searches (if they don't exist)
     try {
-      await db.collection("cities").createIndex({ area_covered: 1 })
-      await db.collection("cities").createIndex({ area_covered: "text" })
-      await db.collection("cities").createIndex({ postcode_area: 1 })
+      await db.collection(COLLECTION_NAME).createIndex({ area_covered: 1 })
+      await db.collection(COLLECTION_NAME).createIndex({ area_covered: "text" })
+      await db.collection(COLLECTION_NAME).createIndex({ postcode_area: 1 })
       console.log("Created indexes for faster city searches")
     } catch (error) {
       console.log("Indexes may already exist:", error)
@@ -138,17 +120,11 @@ async function prefetchPopularCities(db: Db) {
     for (const city of POPULAR_CITIES) {
       const lowercaseCity = city.toLowerCase()
 
-      // Try different field names in case the schema is different
+      // Use the correct field names based on your document structure
       const results = await db
-        .collection("cities")
+        .collection(COLLECTION_NAME)
         .find({
-          $or: [
-            // Try different possible field names for city names
-            { area_covered: { $regex: `^${city}`, $options: "i" } },
-            { name: { $regex: `^${city}`, $options: "i" } },
-            { city: { $regex: `^${city}`, $options: "i" } },
-            { city_name: { $regex: `^${city}`, $options: "i" } },
-          ],
+          area_covered: { $regex: `^${city}`, $options: "i" },
         })
         .sort({ area_covered: 1 })
         .limit(10)
