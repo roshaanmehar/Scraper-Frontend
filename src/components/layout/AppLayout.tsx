@@ -1,46 +1,24 @@
-"use client"
+import type React from "react"
 
-import { useState, useEffect } from "react"
-import Navbar from "@/components/layout/Navbar"
-import styles from "@/styles/layout/AppLayout.module.css"
-
-interface AppLayoutProps {
+export default function AppLayout({
+  children,
+  activeTab = "home",
+}: {
   children: React.ReactNode
-  activeTab: string
-}
-
-export default function AppLayout({ children, activeTab }: AppLayoutProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
-  // Check if localStorage is available (client-side)
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme")
-    if (savedTheme) {
-      setIsDarkMode(savedTheme === "dark")
-    } else {
-      // If no saved preference, check system preference
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      setIsDarkMode(prefersDark)
-    }
-  }, [])
-
-  // Update localStorage when theme changes
-  useEffect(() => {
-    localStorage.setItem("theme", isDarkMode ? "dark" : "light")
-    document.body.className = isDarkMode ? "dark-theme" : "light-theme"
-  }, [isDarkMode])
-
-  // Toggle theme
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => !prev)
-  }
-
+  activeTab?: string
+}) {
   return (
-    <div className={styles.container}>
-      <div className={styles.panel}>
-        <Navbar activeTab={activeTab} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
-        <div className={styles.contentArea}>{children}</div>
-      </div>
+    <div className="app-layout">
+      <header className="app-header">
+        <h1>GMB Scraper</h1>
+        <nav>
+          <ul>
+            <li className={activeTab === "home" ? "active" : ""}>Home</li>
+            <li className={activeTab === "results" ? "active" : ""}>Results</li>
+          </ul>
+        </nav>
+      </header>
+      <main>{children}</main>
     </div>
   )
 }
