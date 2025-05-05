@@ -395,3 +395,19 @@
     display: none;
   }
   
+  /* Enhanced email list styling */
+  .email-list {
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    padding: 0.5rem;
+  }
+  
+  .email-list .detail-value {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+    margin-bottom: 0.25rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
+  
