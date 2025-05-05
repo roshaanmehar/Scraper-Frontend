@@ -29,6 +29,7 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
   const [isLoading, setIsLoading] = useState(false)
   const [sortOption, setSortOption] = useState("recent")
   const isInitialMount = useRef(true)
+  const [showExportOptions, setShowExportOptions] = useState(false)
 
   // Debounce function to prevent too many requests while typing
   const debounce = (func: Function, delay: number) => {
@@ -103,7 +104,8 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
     const value = e.target.value
     setSortOption(value)
 
-    // Sort the current results
+    // Only resort the current results for display
+    // For export, the sorting will be handled server-side
     const sortedRestaurants = [...restaurants]
 
     switch (value) {
@@ -115,7 +117,12 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
         break
       case "recent":
       default:
-        // Already sorted by recent in the API
+        // For recent, we should re-sort by scraped_at
+        sortedRestaurants.sort((a, b) => {
+          const dateA = a.scraped_at ? new Date(a.scraped_at).getTime() : 0
+          const dateB = b.scraped_at ? new Date(b.scraped_at).getTime() : 0
+          return dateB - dateA
+        })
         break
     }
 
@@ -165,28 +172,48 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
   }
 
   // Function to export data as CSV
-  const exportToCSV = () => {
-    // Only export restaurants with valid emails
-    const restaurantsToExport = restaurants.filter((restaurant) => {
-      if (!restaurant.email) return false
+  const exportToCSV = async (exportAll = false) => {
+    setIsLoading(true)
 
-      if (Array.isArray(restaurant.email)) {
-        return restaurant.email.some(
-          (email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "" && email.includes("@"),
-        )
+    let restaurantsToExport = []
+
+    if (exportAll) {
+      // Fetch all restaurants with valid emails
+      try {
+        const response = await fetch(`/api/search/export?query=${encodeURIComponent(query)}&sort=${sortOption}`)
+        if (!response.ok) throw new Error("Failed to fetch all restaurants")
+        const data = await response.json()
+        restaurantsToExport = data.restaurants
+      } catch (error) {
+        console.error("Error fetching all restaurants:", error)
+        alert("Failed to export all records. Please try again.")
+        setIsLoading(false)
+        return
       }
+    } else {
+      // Use current page restaurants
+      restaurantsToExport = restaurants.filter((restaurant) => {
+        if (!restaurant.email) return false
 
-      return (
-        restaurant.email !== "N/A" &&
-        restaurant.email !== "n/a" &&
-        restaurant.email.trim() !== "" &&
-        restaurant.email.includes("@")
-      )
-    })
+        if (Array.isArray(restaurant.email)) {
+          return restaurant.email.some(
+            (email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "" && email.includes("@"),
+          )
+        }
+
+        return (
+          restaurant.email !== "N/A" &&
+          restaurant.email !== "n/a" &&
+          restaurant.email.trim() !== "" &&
+          restaurant.email.includes("@")
+        )
+      })
+    }
 
     // If no restaurants to export, show alert
     if (restaurantsToExport.length === 0) {
       alert("No restaurants with valid emails to export")
+      setIsLoading(false)
       return
     }
 
@@ -248,12 +275,15 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
     // Create download link and click it
     const link = document.createElement("a")
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+    const exportType = exportAll ? "all" : "page"
     link.setAttribute("href", url)
-    link.setAttribute("download", `restaurants-export-${timestamp}.csv`)
+    link.setAttribute("download", `restaurants-export-${exportType}-${timestamp}.csv`)
     link.style.visibility = "hidden"
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+
+    setIsLoading(false)
   }
 
   return (
@@ -277,14 +307,36 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
               <label htmlFor="sort">Sort by:</label>
               <select id="sort" className="sort-select" value={sortOption} onChange={handleSortChange}>
                 <option value="recent">Most Recent</option>
-                <option value="name">Business Name</option>
-                <option value="reviews">Number of Reviews</option>
+                <option value="name">Business Name (A-Z)</option>
+                <option value="reviews">Most Reviews</option>
               </select>
             </div>
 
-            <button className="btn btn-secondary" onClick={exportToCSV}>
-              Export
-            </button>
+            <div className="export-container">
+              <button className="btn btn-secondary" onClick={() => setShowExportOptions(!showExportOptions)}>
+                Export
+              </button>
+              {showExportOptions && (
+                <div className="export-dropdown">
+                  <button
+                    onClick={() => {
+                      exportToCSV(false)
+                      setShowExportOptions(false)
+                    }}
+                  >
+                    Export Current Page
+                  </button>
+                  <button
+                    onClick={() => {
+                      exportToCSV(true)
+                      setShowExportOptions(false)
+                    }}
+                  >
+                    Export All Records
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -395,6 +447,8 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
           <button className="btn btn-outline">Back to Search</button>
         </Link>
       </div>
+      {/* Add the click outside handler to close the dropdown */}
+      {showExportOptions && <div className="overlay" onClick={() => setShowExportOptions(false)}></div>}
     </>
   )
 }
