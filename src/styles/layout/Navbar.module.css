@@ -7,10 +7,32 @@
   border-bottom: 1px solid #eee;
 }
 
+/* Animation for navbar */
+.animateNavbar {
+  animation: fadeInDown 0.5s ease-out forwards;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .navbarBrand {
   display: flex;
   align-items: center;
   gap: 10px;
+  transition: transform 0.3s ease;
+}
+
+/* Animation for brand */
+.animateBrand:hover {
+  transform: scale(1.05);
 }
 
 .titleIcon {
@@ -53,6 +75,7 @@
 .navTab:hover {
   background: #eee;
   color: #333;
+  transform: translateY(-2px);
 }
 
 .activeNavTab {
@@ -130,6 +153,19 @@
   background: #eee;
 }
 
+/* Animation for button */
+.animateButton {
+  transition: transform 0.2s ease;
+}
+
+.animateButton:hover {
+  transform: scale(1.2);
+}
+
+.animateButton:active {
+  transform: scale(0.9);
+}
+
 /* Dark theme overrides */
 .dark-theme .navbar {
   background: #222;
@@ -184,5 +220,14 @@
 
   .navTab {
     padding: 8px;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
