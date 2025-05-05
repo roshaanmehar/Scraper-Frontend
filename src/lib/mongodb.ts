@@ -23,6 +23,28 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     console.log(`Using database: ${MONGODB_DB}`)
     const db = client.db(MONGODB_DB)
 
+    // Check if cities collection exists
+    const collections = await db.listCollections({ name: "cities" }).toArray()
+    if (collections.length === 0) {
+      console.warn("Warning: 'cities' collection does not exist in the database")
+
+      // Check what collections do exist
+      const allCollections = await db.listCollections().toArray()
+      console.log(
+        "Available collections:",
+        allCollections.map((c) => c.name),
+      )
+    } else {
+      const cityCount = await db.collection("cities").countDocuments()
+      console.log(`Found 'cities' collection with ${cityCount} documents`)
+
+      // Log a sample city
+      if (cityCount > 0) {
+        const sampleCity = await db.collection("cities").findOne()
+        console.log("Sample city:", sampleCity)
+      }
+    }
+
     // Cache the connection
     cachedClient = client
     cachedDb = db
