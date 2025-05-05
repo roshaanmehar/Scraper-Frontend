@@ -2,8 +2,12 @@ import { MongoClient, type Db } from "mongodb"
 
 // Connection URL
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-// Database Name - Use "cities" as the database name (matching the user's actual DB name)
-const MONGODB_DB = "cities"
+
+// We'll try both database names to ensure we find the right one
+// The user mentioned they have a database named "cities" with a collection "cities"
+// But the logs show we're not finding data, so let's check both possibilities
+const PRIMARY_DB = "cities"
+const FALLBACK_DB = "Leeds"
 
 // Global caches for city search
 export const cityCache = new Map<string, any[]>()
@@ -28,6 +32,7 @@ const POPULAR_CITIES = [
 let cachedClient: MongoClient | null = null
 let cachedDb: Db | null = null
 let isOptimized = false
+let correctDatabaseName = PRIMARY_DB // Will be updated if we find the correct DB
 
 export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
   // If we already have a connection, use it
@@ -40,13 +45,42 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
 
     // Connect to MongoDB
     const client = await MongoClient.connect(MONGODB_URI)
-    const db = client.db(MONGODB_DB)
+
+    // First try the primary database name
+    let db = client.db(correctDatabaseName)
+
+    // Check if the cities collection exists in this database
+    const collections = await db.listCollections({ name: "cities" }).toArray()
+
+    // If cities collection doesn't exist in the primary DB, try the fallback
+    if (collections.length === 0 && correctDatabaseName === PRIMARY_DB) {
+      console.log(`Collection 'cities' not found in database '${PRIMARY_DB}', trying '${FALLBACK_DB}'`)
+      db = client.db(FALLBACK_DB)
+      const fallbackCollections = await db.listCollections({ name: "cities" }).toArray()
+
+      if (fallbackCollections.length > 0) {
+        console.log(`Found 'cities' collection in database '${FALLBACK_DB}'`)
+        correctDatabaseName = FALLBACK_DB
+      } else {
+        console.warn(`'cities' collection not found in either '${PRIMARY_DB}' or '${FALLBACK_DB}'`)
+      }
+    }
 
     // Cache the connection
     cachedClient = client
     cachedDb = db
 
-    console.log(`Connected to MongoDB database: ${MONGODB_DB}`)
+    console.log(`Connected to MongoDB database: ${correctDatabaseName}`)
+
+    // Check if the cities collection has any documents
+    const cityCount = await db.collection("cities").countDocuments()
+    console.log(`Found ${cityCount} documents in the 'cities' collection`)
+
+    // Get a sample document to check the structure
+    if (cityCount > 0) {
+      const sampleCity = await db.collection("cities").findOne()
+      console.log("Sample city document structure:", JSON.stringify(sampleCity))
+    }
 
     // Run optimization in the background
     optimizeDatabaseInBackground(db).catch((err) => {
@@ -103,30 +137,40 @@ async function prefetchPopularCities(db: Db) {
 
     for (const city of POPULAR_CITIES) {
       const lowercaseCity = city.toLowerCase()
+
+      // Try different field names in case the schema is different
       const results = await db
         .collection("cities")
         .find({
-          area_covered: {
-            $regex: `^${city}`,
-            $options: "i",
-          },
+          $or: [
+            // Try different possible field names for city names
+            { area_covered: { $regex: `^${city}`, $options: "i" } },
+            { name: { $regex: `^${city}`, $options: "i" } },
+            { city: { $regex: `^${city}`, $options: "i" } },
+            { city_name: { $regex: `^${city}`, $options: "i" } },
+          ],
         })
         .sort({ area_covered: 1 })
         .limit(10)
         .toArray()
 
-      popularCitiesCache[lowercaseCity] = results
+      if (results.length > 0) {
+        console.log(`Found ${results.length} results for "${city}"`)
+        popularCitiesCache[lowercaseCity] = results
 
-      // Also cache partial matches (first 3+ characters)
-      if (city.length > 3) {
-        for (let i = 3; i < city.length; i++) {
-          const partial = city.substring(0, i).toLowerCase()
-          popularCitiesCache[partial] = results
+        // Also cache partial matches (first 3+ characters)
+        if (city.length > 3) {
+          for (let i = 3; i < city.length; i++) {
+            const partial = city.substring(0, i).toLowerCase()
+            popularCitiesCache[partial] = results
+          }
         }
+      } else {
+        console.log(`No results found for "${city}"`)
       }
     }
 
-    console.log(`Prefetched ${POPULAR_CITIES.length} popular cities for faster search`)
+    console.log(`Prefetched popular cities for faster search`)
   } catch (error) {
     console.error("Error prefetching popular cities:", error)
   }
