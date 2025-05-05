@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import styles from "../styles/HomePage.module.css"
+import "../styles/Home.css"
 
 interface City {
   _id: string
@@ -153,22 +153,22 @@ export default function HomePage() {
   }
 
   return (
-    <div className={styles.homeContainer}>
-      <div className={styles.mainConfigSection}>
-        <h2 className={styles.sectionTitle}>GMB Scraper</h2>
+    <div className="homeContainer">
+      <div className="mainConfigSection">
+        <h2 className="sectionTitle">GMB Scraper</h2>
 
         {errorMessage && (
-          <div className={styles.errorMessage}>
-            <span className={styles.searchIcon}>🔍</span>
+          <div className="errorMessage">
+            <span className="searchIcon">🔍</span>
             <span>{errorMessage}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className={styles.formFields}>
-            <div className={styles.inputGroup} ref={dropdownRef}>
+          <div className="formFields">
+            <div className="inputGroup" ref={dropdownRef}>
               <label htmlFor="city">City</label>
-              <div className={styles.citySearchContainer}>
+              <div className="citySearchContainer">
                 <input
                   id="city"
                   ref={cityInputRef}
@@ -177,19 +177,19 @@ export default function HomePage() {
                   onChange={(e) => handleInputChange(e, setCitySearch)}
                   onFocus={() => citySearch.trim().length > 0 && setShowDropdown(true)}
                   placeholder="Enter city name"
-                  className={`${styles.input} ${selectedCity ? styles.selectedInput : ""}`}
+                  className={`input ${selectedCity ? "selectedInput" : ""}`}
                   autoComplete="off"
                 />
-                {isSearchingCities && <div className={styles.searchSpinner}></div>}
+                {isSearchingCities && <div className="searchSpinner"></div>}
                 {selectedCity && (
-                  <div className={styles.selectedIndicator}>
-                    <span className={styles.checkIcon}>✓</span>
+                  <div className="selectedIndicator">
+                    <span className="checkIcon">✓</span>
                   </div>
                 )}
                 {selectedCity && (
                   <button
                     type="button"
-                    className={styles.clearButton}
+                    className="clearButton"
                     onClick={clearCitySelection}
                     aria-label="Clear city selection"
                   >
@@ -198,23 +198,23 @@ export default function HomePage() {
                 )}
 
                 {showDropdown && cities.length > 0 && (
-                  <div className={styles.citySuggestions}>
+                  <div className="citySuggestions">
                     {cities.map((city) => (
-                      <div key={city._id} className={styles.citySuggestion} onClick={() => selectCity(city)}>
-                        <span className={styles.suggestionIcon}>📍</span>
-                        <span className={styles.cityName}>{highlightMatch(city.area_covered, citySearch)}</span>
-                        <span className={styles.postcodeArea}>{city.postcode_area}</span>
+                      <div key={city._id} className="citySuggestion" onClick={() => selectCity(city)}>
+                        <span className="suggestionIcon">📍</span>
+                        <span className="cityName">{highlightMatch(city.area_covered, citySearch)}</span>
+                        <span className="postcodeArea">{city.postcode_area}</span>
                       </div>
                     ))}
                   </div>
                 )}
 
                 {showDropdown && cities.length === 0 && !isSearchingCities && (
-                  <div className={styles.noResults}>
+                  <div className="noResults">
                     No cities found matching "{citySearch}"
                     <button
                       type="button"
-                      className={styles.manualEntryButton}
+                      className="manualEntryButton"
                       onClick={() => {
                         setSelectedCity({
                           _id: "manual",
@@ -231,7 +231,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className={styles.inputGroup}>
+            <div className="inputGroup">
               <label htmlFor="keyword">Keyword</label>
               <input
                 id="keyword"
@@ -239,20 +239,20 @@ export default function HomePage() {
                 value={keyword}
                 onChange={(e) => handleInputChange(e, setKeyword)}
                 placeholder="Enter keyword (e.g. restaurants)"
-                className={styles.input}
+                className="input"
               />
             </div>
           </div>
 
-          <div className={styles.startButtonContainer}>
+          <div className="startButtonContainer">
             <button
               type="submit"
-              className={`${styles.startButton} ${isLoading ? styles.loadingButton : ""}`}
+              className={`startButton ${isLoading ? "loadingButton" : ""}`}
               disabled={isLoading || !selectedCity || !keyword}
             >
               {isLoading ? (
                 <>
-                  <span className={styles.loadingSpinner}></span> Processing...
+                  <span className="loadingSpinner"></span> Processing...
                 </>
               ) : (
                 <>🔍 Start Scraper</>
