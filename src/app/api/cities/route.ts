@@ -6,27 +6,35 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
 
-    if (!search || search.length < 2) {
+    if (!search || search.trim().length < 2) {
       return NextResponse.json([])
     }
+
+    console.log(`Searching for cities with term: "${search}"`)
 
     const { db } = await connectToDatabase()
 
     // Create a case-insensitive regex for the search term
-    const searchRegex = new RegExp(search, "i")
+    const query = {
+      area_covered: {
+        $regex: search,
+        $options: "i", // Case-insensitive
+      },
+    }
 
-    // Query the cities collection
+    // Fetch cities data with case-insensitive search
     const cities = await db
       .collection("cities")
-      .find({
-        area_covered: { $regex: searchRegex },
-      })
-      .limit(10)
+      .find(query)
+      .sort({ area_covered: 1 })
+      .limit(10) // Limit to 10 results for performance
       .toArray()
+
+    console.log(`Found ${cities.length} cities matching "${search}"`)
 
     return NextResponse.json(cities)
   } catch (error) {
     console.error("Error fetching cities:", error)
-    return NextResponse.json({ error: "Failed to fetch cities" }, { status: 500 })
+    return NextResponse.json([], { status: 500 })
   }
 }
