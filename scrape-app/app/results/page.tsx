@@ -6,9 +6,8 @@ export default async function ResultsPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
-  // Safely access page parameter
-  const pageStr = searchParams.page || "1"
-  const page = typeof pageStr === "string" ? Number.parseInt(pageStr, 10) : 1
+  // Get page parameter directly
+  const page = typeof searchParams.page === "string" ? Number.parseInt(searchParams.page, 10) : 1
 
   console.log(`Fetching page ${page} from MongoDB...`)
 

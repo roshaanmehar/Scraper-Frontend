@@ -111,15 +111,24 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
     const client = await clientPromise
     const db = client.db("Leeds") // Database name specified here
 
-    // Create search filter
+    // Try to convert query to number for phonenumber search
+    let phoneQuery = null
+    if (!isNaN(Number(query))) {
+      phoneQuery = Number(query)
+    }
+
+    // Create search filter with improved phone number search
     const filter = {
       $or: [
         { businessname: { $regex: query, $options: "i" } },
         { address: { $regex: query, $options: "i" } },
+        ...(phoneQuery !== null ? [{ phonenumber: phoneQuery }] : []),
         { email: { $regex: query, $options: "i" } },
         { subsector: { $regex: query, $options: "i" } },
       ],
     }
+
+    console.log("Search filter:", JSON.stringify(filter))
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit

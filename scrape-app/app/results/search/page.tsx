@@ -6,12 +6,9 @@ export default async function SearchResultsPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
-  // Safely access search parameters
-  const queryParam = searchParams.query || ""
-  const query = typeof queryParam === "string" ? queryParam : ""
-
-  const pageStr = searchParams.page || "1"
-  const page = typeof pageStr === "string" ? Number.parseInt(pageStr, 10) : 1
+  // Get search parameters directly
+  const query = typeof searchParams.query === "string" ? searchParams.query : ""
+  const page = typeof searchParams.page === "string" ? Number.parseInt(searchParams.page, 10) : 1
 
   console.log(`Searching for "${query}" on page ${page}...`)
 
