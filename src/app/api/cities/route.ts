@@ -1,10 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 
+// Cache for frequently searched cities
+const cityCache = new Map<string, any[]>()
+const CACHE_EXPIRY = 1000 * 60 * 5 // 5 minutes
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
+    const lowercaseSearch = search.toLowerCase()
 
     if (!search || search.trim().length < 1) {
       return NextResponse.json([])
@@ -13,74 +18,57 @@ export async function GET(request: NextRequest) {
     console.log(`Searching for cities with term: "${search}"`)
     const startTime = performance.now()
 
+    // Check cache first for faster responses
+    const cacheKey = lowercaseSearch
+    if (cityCache.has(cacheKey)) {
+      const cachedResult = cityCache.get(cacheKey)
+      console.log(`Using cached result for "${search}" with ${cachedResult?.length || 0} cities`)
+      return NextResponse.json(cachedResult)
+    }
+
     const { db } = await connectToDatabase()
 
-    // Log the collection name and count to verify we're looking in the right place
-    const collectionName = "cities"
-    const totalCities = await db.collection(collectionName).countDocuments({})
-    console.log(`Total documents in ${collectionName} collection: ${totalCities}`)
+    // Ensure we have an index on area_covered for faster searches
+    try {
+      await db.collection("cities").createIndex({ area_covered: 1 })
+      await db.collection("cities").createIndex({ area_covered: "text" })
+    } catch (error) {
+      // Index might already exist, continue
+      console.log("Index may already exist:", error)
+    }
 
-    // Log a sample document to verify structure
-    const sampleCity = await db.collection(collectionName).findOne({})
-    console.log(`Sample city document:`, JSON.stringify(sampleCity, null, 2))
-
-    // Create a case-insensitive regex for the search term
-    const query = {
+    // First try a prefix search for faster results (starts with)
+    const prefixQuery = {
       area_covered: {
-        $regex: search,
+        $regex: `^${search}`,
         $options: "i", // Case-insensitive
       },
     }
 
-    console.log(`Search query:`, JSON.stringify(query))
+    let cities = await db.collection("cities").find(prefixQuery).sort({ area_covered: 1 }).limit(10).toArray()
 
-    // Fetch cities data with case-insensitive search
-    const cities = await db
-      .collection(collectionName)
-      .find(query)
-      .sort({ area_covered: 1 })
-      .limit(10) // Limit to 10 results for performance
-      .toArray()
-
-    const endTime = performance.now()
-    console.log(`Found ${cities.length} cities matching "${search}" in ${(endTime - startTime).toFixed(2)}ms`)
-
+    // If no results with prefix search, try a contains search
     if (cities.length === 0) {
-      // If no results, try a more flexible search
-      console.log("No results with exact search, trying more flexible search")
-
-      const flexibleQuery = {
+      const containsQuery = {
         area_covered: {
-          $regex: `.*${search}.*`,
+          $regex: search,
           $options: "i", // Case-insensitive
         },
       }
 
-      const flexibleCities = await db
-        .collection(collectionName)
-        .find(flexibleQuery)
-        .sort({ area_covered: 1 })
-        .limit(10)
-        .toArray()
-
-      console.log(`Found ${flexibleCities.length} cities with flexible search`)
-
-      if (flexibleCities.length > 0) {
-        return NextResponse.json(flexibleCities)
-      }
-
-      // If still no results, try searching for exact match ignoring case
-      const exactCities = await db
-        .collection(collectionName)
-        .find({ area_covered: { $regex: `^${search}$`, $options: "i" } })
-        .toArray()
-
-      console.log(`Found ${exactCities.length} cities with exact case-insensitive match`)
-
-      if (exactCities.length > 0) {
-        return NextResponse.json(exactCities)
-      }
+      cities = await db.collection("cities").find(containsQuery).sort({ area_covered: 1 }).limit(10).toArray()
     }
+
+    const endTime = performance.now()
+    console.log(`Found ${cities.length} cities matching "${search}" in ${(endTime - startTime).toFixed(2)}ms`)
+
+    // Cache the results for future requests
+    cityCache.set(cacheKey, cities)
+
+    // Set cache expiry
+    setTimeout(() => {
+      cityCache.delete(cacheKey)
+    }, CACHE_EXPIRY)
 
     return NextResponse.json(cities)
   } catch (error) {
