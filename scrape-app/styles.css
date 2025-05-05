@@ -16,7 +16,7 @@
   /* Navbar styles */
   .navbar {
     background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -51,10 +51,22 @@
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s;
+    position: relative;
   }
   
-  .nav-link:hover {
-    color: #555;
+  .nav-link:after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background-color: #000;
+    transition: width 0.3s;
+  }
+  
+  .nav-link:hover:after {
+    width: 100%;
   }
   
   /* Main content */
@@ -78,10 +90,15 @@
   /* Card styles */
   .card {
     background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 2rem;
     margin-bottom: 2rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   }
   
   /* Form styles */
@@ -99,16 +116,18 @@
   input,
   select {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
   
   input:focus,
   select:focus {
     outline: none;
     border-color: #000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
   }
   
   /* Button styles */
@@ -116,21 +135,20 @@
     display: inline-block;
     padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
+    transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
   }
   
   .btn:hover:not(:disabled) {
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
+  .btn:active:not(:disabled) {
+    transform: translateY(0);
   }
   
   .btn-primary {
@@ -141,6 +159,13 @@
   
   .btn-primary:hover:not(:disabled) {
     background-color: #333;
+  }
+  
+  .btn-primary:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.7;
   }
   
   .btn-secondary {
@@ -226,6 +251,10 @@
     margin: 1rem 0;
     font-size: 0.95rem;
     color: #555;
+    background-color: #f5f5f5;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    display: inline-block;
   }
   
   /* Results grid styles */
@@ -238,11 +267,12 @@
   
   .result-card {
     background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 1.5rem;
     transition: transform 0.2s, box-shadow 0.2s;
     border-top: 4px solid #000;
+    overflow: hidden;
   }
   
   .result-card:hover {
@@ -255,7 +285,7 @@
     margin-bottom: 1rem;
     color: #000;
     border-bottom: 1px solid #eee;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0.75rem;
   }
   
   .business-details {
@@ -286,17 +316,22 @@
     flex-direction: column;
     gap: 0.25rem;
     background-color: #f9f9f9;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 0.5rem;
   }
   
   .email-list .detail-value {
-    padding: 0.25rem 0.5rem;
-    border-radius: 3px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
     background-color: #f0f0f0;
     margin-bottom: 0.25rem;
     font-family: monospace;
     font-size: 0.9rem;
+    transition: background-color 0.2s;
+  }
+  
+  .email-list .detail-value:hover {
+    background-color: #e8e8e8;
   }
   
   .address {
@@ -315,6 +350,7 @@
     display: inline-block;
     transition: opacity 0.2s;
     width: fit-content;
+    padding-bottom: 2px;
   }
   
   .website-link:hover {
@@ -345,7 +381,7 @@
     padding: 0.5rem 1rem;
     background-color: #fff;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
   }
@@ -367,12 +403,12 @@
   }
   
   .pagination-number {
-    width: 2rem;
-    height: 2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid #ddd;
     background-color: #fff;
     cursor: pointer;
@@ -447,20 +483,23 @@
     left: 0;
     right: 0;
     background-color: #fff;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
     z-index: 10;
     max-height: 300px;
     overflow-y: auto;
-    margin-top: 5px;
+    margin-top: 8px;
     border: 1px solid #eee;
   }
   
   .city-option {
-    padding: 10px 15px;
+    padding: 12px 16px;
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .city-option:last-child {
@@ -473,26 +512,15 @@
   
   .city-name {
     font-weight: 500;
-    margin-bottom: 4px;
-  }
-  
-  .city-details {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    color: #666;
   }
   
   .postcode-area {
     font-weight: 600;
     color: #000;
     background-color: #f0f0f0;
-    padding: 2px 6px;
-    border-radius: 3px;
-  }
-  
-  .population {
-    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
   }
   
   .no-results {
@@ -505,36 +533,101 @@
   .selected-city-info {
     margin-top: 12px;
     background-color: #f9f9f9;
-    border-radius: 4px;
-    padding: 12px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    border-radius: 8px;
+    padding: 12px 16px;
     border: 1px solid #eee;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   
   .info-item {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .info-label {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #666;
-    margin-bottom: 2px;
   }
   
   .info-value {
     font-weight: 500;
+    background-color: #f0f0f0;
+    padding: 4px 10px;
+    border-radius: 4px;
   }
   
   .disabled-link {
     pointer-events: none;
   }
   
-  @media (max-width: 576px) {
-    .selected-city-info {
-      grid-template-columns: 1fr;
-    }
+  .search-loader {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-top: 2px solid #000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  /* Export dropdown styles */
+  .export-container {
+    position: relative;
+  }
+  
+  .export-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    min-width: 180px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  
+  .export-dropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .export-dropdown button:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .export-dropdown button:not(:last-child) {
+    border-bottom: 1px solid #eee;
+  }
+  
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
   }
   
