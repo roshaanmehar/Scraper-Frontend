@@ -192,12 +192,19 @@
     flex: 1;
   }
   
+  /* Results summary */
+  .results-summary {
+    margin: 1rem 0;
+    font-size: 0.95rem;
+    color: #555;
+  }
+  
   /* Results grid styles */
   .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 1rem;
   }
   
   .result-card {
@@ -242,6 +249,22 @@
   
   .detail-value {
     font-size: 0.95rem;
+    word-break: break-word;
+  }
+  
+  .email-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .address {
+    line-height: 1.4;
+  }
+  
+  .no-data {
+    color: #999;
+    font-style: italic;
   }
   
   .website-link {
@@ -250,10 +273,22 @@
     border-bottom: 1px solid #000;
     display: inline-block;
     transition: opacity 0.2s;
+    width: fit-content;
   }
   
   .website-link:hover {
     opacity: 0.7;
+  }
+  
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: #555;
+    font-style: italic;
   }
   
   /* Pagination styles */
