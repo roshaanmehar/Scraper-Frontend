@@ -165,7 +165,9 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
         {
           $or: [
             { businessname: { $regex: query, $options: "i" } },
-            ...(phoneQuery !== null ? [{ phonenumber: phoneQuery }] : []),
+            ...(phoneQuery !== null
+              ? [{ phonenumber: phoneQuery }]
+              : [{ phonenumber: { $regex: query, $options: "i" } }]),
             { email: { $regex: query, $options: "i" } },
             { subsector: { $regex: query, $options: "i" } },
           ],
