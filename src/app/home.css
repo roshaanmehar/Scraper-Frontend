@@ -1,0 +1,35 @@
+.home-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .scraper-form {
+    width: 100%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .submit-button {
+    width: 100%;
+    height: 40px;
+    margin-top: 1rem;
+  }
+  
+  .error-alert {
+    margin-bottom: 1.5rem;
+  }
+  
