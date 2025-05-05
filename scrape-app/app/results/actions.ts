@@ -2,12 +2,27 @@
 
 import { MongoClient } from "mongodb"
 
+export type Restaurant = {
+  _id: string
+  businessname: string
+  phonenumber?: number | string
+  address?: string
+  email?: string | string[]
+  website?: string
+  stars?: string
+  numberofreviews?: number
+  subsector?: string
+  scraped_at?: Date | string | null
+  emailstatus?: string
+  emailscraped_at?: Date | string | null
+}
+
 // MongoDB connection setup
 if (!process.env.MONGODB_URI) {
   throw new Error("Please add your MongoDB URI to .env.local")
 }
 
-const uri = process.env.MONGODB_URI
+const uri = process.env.MONGODB_URI as string
 const options = {}
 
 let client
@@ -31,25 +46,10 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect()
 }
 
-export type Restaurant = {
-  _id: string
-  businessname: string
-  phonenumber: number
-  address: string
-  email: string[]
-  website: string
-  stars: string
-  numberofreviews: number
-  subsector: string
-  scraped_at: Date
-  emailstatus: string
-  emailscraped_at: Date
-}
-
 export async function getRestaurants(page = 1, limit = 6) {
   try {
     const client = await clientPromise
-    const db = client.db("Leeds") // Database name specified here, not in env
+    const db = client.db("Leeds") // Database name specified here
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit
@@ -100,7 +100,7 @@ export async function getRestaurants(page = 1, limit = 6) {
 export async function searchRestaurants(query: string, page = 1, limit = 6) {
   try {
     const client = await clientPromise
-    const db = client.db("Leeds") // Database name specified here, not in env
+    const db = client.db("Leeds") // Database name specified here
 
     // Create search filter
     const filter = {

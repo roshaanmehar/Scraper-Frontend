@@ -1,15 +1,16 @@
 import Link from "next/link"
-import { searchRestaurants } from "../../actions"
+import { searchRestaurants } from "../actions"
 
 export default async function SearchResultsPage({
   searchParams,
 }: {
   searchParams: { query: string; page?: string }
 }) {
-  const { query, page: pageParam } = searchParams
-  const page = pageParam ? Number.parseInt(pageParam) : 1
+  // Properly handle searchParams - direct access without intermediate variables
+  const query = searchParams?.query || ""
+  const page = searchParams?.page ? Number.parseInt(searchParams.page) : 1
 
-  const { restaurants, pagination } = await searchRestaurants(query || "", page)
+  const { restaurants, pagination } = await searchRestaurants(query, page)
 
   // Generate pagination numbers
   const paginationNumbers = []
