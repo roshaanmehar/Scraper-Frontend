@@ -8,7 +8,6 @@ import { Search, MapPin, X, Check } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/HomePage.module.css"
 import { debounce } from "@/lib/utils"
-import ScraperForm from "@/components/ScraperForm"
 
 interface City {
   _id: string
@@ -198,109 +197,104 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-8 mb-8">
-            <ScraperForm />
+          <form onSubmit={handleSubmit}>
+            <div className={styles.formFields}>
+              <div className={styles.inputGroup} ref={dropdownRef}>
+                <label htmlFor="city">City</label>
+                <div className={styles.citySearchContainer}>
+                  <input
+                    id="city"
+                    ref={cityInputRef}
+                    type="text"
+                    value={citySearch}
+                    onChange={(e) => handleInputChange(e, setCitySearch)}
+                    onFocus={() => citySearch.trim().length > 0 && setShowDropdown(true)}
+                    placeholder="Enter city name"
+                    className={`${styles.input} ${selectedCity ? styles.selectedInput : ""}`}
+                    autoComplete="off"
+                  />
+                  {isSearchingCities && <div className={styles.searchSpinner}></div>}
+                  {selectedCity && (
+                    <div className={styles.selectedIndicator}>
+                      <Check size={16} className={styles.checkIcon} />
+                    </div>
+                  )}
+                  {selectedCity && (
+                    <button
+                      type="button"
+                      className={styles.clearButton}
+                      onClick={clearCitySelection}
+                      aria-label="Clear city selection"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
 
-            <div className={styles.form}>
-              <div className={styles.formFields}>
-                <div className={styles.inputGroup} ref={dropdownRef}>
-                  <label htmlFor="city">City</label>
-                  <div className={styles.citySearchContainer}>
-                    <input
-                      id="city"
-                      ref={cityInputRef}
-                      type="text"
-                      value={citySearch}
-                      onChange={(e) => handleInputChange(e, setCitySearch)}
-                      onFocus={() => citySearch.trim().length > 0 && setShowDropdown(true)}
-                      placeholder="Enter city name"
-                      className={`${styles.input} ${selectedCity ? styles.selectedInput : ""}`}
-                      autoComplete="off"
-                    />
-                    {isSearchingCities && <div className={styles.searchSpinner}></div>}
-                    {selectedCity && (
-                      <div className={styles.selectedIndicator}>
-                        <Check size={16} className={styles.checkIcon} />
-                      </div>
-                    )}
-                    {selectedCity && (
+                  {showDropdown && cities.length > 0 && (
+                    <div className={styles.citySuggestions}>
+                      {cities.map((city) => (
+                        <div key={city._id} className={styles.citySuggestion} onClick={() => selectCity(city)}>
+                          <MapPin size={16} className={styles.suggestionIcon} />
+                          <span className={styles.cityName}>{highlightMatch(city.area_covered, citySearch)}</span>
+                          <span className={styles.postcodeArea}>{city.postcode_area}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {showDropdown && cities.length === 0 && !isSearchingCities && (
+                    <div className={styles.noResults}>
+                      No cities found matching "{citySearch}"
                       <button
                         type="button"
-                        className={styles.clearButton}
-                        onClick={clearCitySelection}
-                        aria-label="Clear city selection"
+                        className={styles.manualEntryButton}
+                        onClick={() => {
+                          setSelectedCity({
+                            _id: "manual",
+                            area_covered: citySearch,
+                            postcode_area: "UNKNOWN",
+                          })
+                          setShowDropdown(false)
+                        }}
                       >
-                        <X size={16} />
+                        Use "{citySearch}" anyway
                       </button>
-                    )}
-
-                    {showDropdown && cities.length > 0 && (
-                      <div className={styles.citySuggestions}>
-                        {cities.map((city) => (
-                          <div key={city._id} className={styles.citySuggestion} onClick={() => selectCity(city)}>
-                            <MapPin size={16} className={styles.suggestionIcon} />
-                            <span className={styles.cityName}>{highlightMatch(city.area_covered, citySearch)}</span>
-                            <span className={styles.postcodeArea}>{city.postcode_area}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {showDropdown && cities.length === 0 && !isSearchingCities && (
-                      <div className={styles.noResults}>
-                        No cities found matching "{citySearch}"
-                        <button
-                          type="button"
-                          className={styles.manualEntryButton}
-                          onClick={() => {
-                            setSelectedCity({
-                              _id: "manual",
-                              area_covered: citySearch,
-                              postcode_area: "UNKNOWN",
-                            })
-                            setShowDropdown(false)
-                          }}
-                        >
-                          Use "{citySearch}" anyway
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={styles.inputGroup}>
-                  <label htmlFor="keyword">Keyword</label>
-                  <input
-                    id="keyword"
-                    type="text"
-                    value={keyword}
-                    onChange={(e) => handleInputChange(e, setKeyword)}
-                    placeholder="Enter keyword (e.g. restaurants)"
-                    className={styles.input}
-                  />
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className={styles.startButtonContainer}>
-                <button
-                  type="submit"
-                  className={`${styles.startButton} ${isLoading ? styles.loadingButton : ""}`}
-                  disabled={isLoading || !selectedCity || !keyword}
-                  onClick={handleSubmit}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className={styles.loadingSpinner}></span> Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Search size={20} /> Start Scraper
-                    </>
-                  )}
-                </button>
+              <div className={styles.inputGroup}>
+                <label htmlFor="keyword">Keyword</label>
+                <input
+                  id="keyword"
+                  type="text"
+                  value={keyword}
+                  onChange={(e) => handleInputChange(e, setKeyword)}
+                  placeholder="Enter keyword (e.g. restaurants)"
+                  className={styles.input}
+                />
               </div>
             </div>
-          </div>
+
+            <div className={styles.startButtonContainer}>
+              <button
+                type="submit"
+                className={`${styles.startButton} ${isLoading ? styles.loadingButton : ""}`}
+                disabled={isLoading || !selectedCity || !keyword}
+              >
+                {isLoading ? (
+                  <>
+                    <span className={styles.loadingSpinner}></span> Processing...
+                  </>
+                ) : (
+                  <>
+                    <Search size={20} /> Start Scraper
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </AppLayout>
