@@ -46,6 +46,27 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect()
 }
 
+// Helper function to check if a restaurant has valid emails
+function hasValidEmail(restaurant: any): boolean {
+  // If email doesn't exist, return false
+  if (!restaurant.email) return false
+
+  // If email is an array, check if it has at least one non-N/A value
+  if (Array.isArray(restaurant.email)) {
+    return restaurant.email.some(
+      (email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "" && email.includes("@"),
+    )
+  }
+
+  // If email is a string, check if it's not N/A and is a valid format
+  return (
+    restaurant.email !== "N/A" &&
+    restaurant.email !== "n/a" &&
+    restaurant.email.trim() !== "" &&
+    restaurant.email.includes("@")
+  )
+}
+
 export async function getRestaurants(page = 1, limit = 6) {
   try {
     console.log("Connecting to MongoDB...")
@@ -54,33 +75,39 @@ export async function getRestaurants(page = 1, limit = 6) {
 
     const db = client.db("Leeds") // Database name specified here
 
-    // Only fetch restaurants that have emails
+    // Create a more comprehensive filter for valid emails
     const filter = {
-      email: { $exists: true, $ne: [] },
+      email: {
+        $exists: true,
+        $ne: null,
+        $ne: [],
+        $ne: "N/A",
+        $ne: "n/a",
+      },
     }
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit
 
-    console.log(`Fetching restaurants with emails, skip=${skip}, limit=${limit}`)
+    console.log(`Fetching restaurants with valid emails, skip=${skip}, limit=${limit}`)
+
+    // Get all restaurants first to filter them properly
+    const allRestaurants = await db.collection("restaurants").find(filter).sort({ scraped_at: -1 }).toArray()
+
+    // Filter restaurants with valid emails
+    const validEmailRestaurants = allRestaurants.filter(hasValidEmail)
 
     // Get total count for pagination
-    const totalCount = await db.collection("restaurants").countDocuments(filter)
-    console.log(`Total restaurants with emails: ${totalCount}`)
+    const totalCount = validEmailRestaurants.length
+    console.log(`Total restaurants with valid emails: ${totalCount}`)
 
-    // Fetch restaurants with pagination
-    const restaurants = await db
-      .collection("restaurants")
-      .find(filter)
-      .sort({ scraped_at: -1 }) // Sort by most recently scraped
-      .skip(skip)
-      .limit(limit)
-      .toArray()
+    // Apply pagination manually
+    const paginatedRestaurants = validEmailRestaurants.slice(skip, skip + limit)
 
-    console.log(`Fetched ${restaurants.length} restaurants from MongoDB`)
+    console.log(`Fetched ${paginatedRestaurants.length} restaurants from MongoDB`)
 
     // Convert MongoDB documents to plain objects
-    const serializedRestaurants = restaurants.map((restaurant) => ({
+    const serializedRestaurants = paginatedRestaurants.map((restaurant) => ({
       ...restaurant,
       _id: restaurant._id.toString(),
       scraped_at: restaurant.scraped_at ? new Date(restaurant.scraped_at).toISOString() : null,
@@ -126,7 +153,15 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
     // Only include restaurants that have emails
     const filter = {
       $and: [
-        { email: { $exists: true, $ne: [] } },
+        {
+          email: {
+            $exists: true,
+            $ne: null,
+            $ne: [],
+            $ne: "N/A",
+            $ne: "n/a",
+          },
+        },
         {
           $or: [
             { businessname: { $regex: query, $options: "i" } },
@@ -140,26 +175,24 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
 
     console.log("Search filter:", JSON.stringify(filter))
 
-    // Calculate skip value for pagination
-    const skip = (page - 1) * limit
+    // Get all matching restaurants first to filter them properly
+    const allMatchingRestaurants = await db.collection("restaurants").find(filter).sort({ scraped_at: -1 }).toArray()
+
+    // Filter restaurants with valid emails
+    const validEmailRestaurants = allMatchingRestaurants.filter(hasValidEmail)
 
     // Get total count for pagination
-    const totalCount = await db.collection("restaurants").countDocuments(filter)
-    console.log(`Found ${totalCount} matching restaurants with emails`)
+    const totalCount = validEmailRestaurants.length
+    console.log(`Found ${totalCount} matching restaurants with valid emails`)
 
-    // Fetch restaurants with pagination
-    const restaurants = await db
-      .collection("restaurants")
-      .find(filter)
-      .sort({ scraped_at: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray()
+    // Apply pagination manually
+    const skip = (page - 1) * limit
+    const paginatedRestaurants = validEmailRestaurants.slice(skip, skip + limit)
 
-    console.log(`Fetched ${restaurants.length} restaurants from search`)
+    console.log(`Fetched ${paginatedRestaurants.length} restaurants from search`)
 
     // Convert MongoDB documents to plain objects
-    const serializedRestaurants = restaurants.map((restaurant) => ({
+    const serializedRestaurants = paginatedRestaurants.map((restaurant) => ({
       ...restaurant,
       _id: restaurant._id.toString(),
       scraped_at: restaurant.scraped_at ? new Date(restaurant.scraped_at).toISOString() : null,
