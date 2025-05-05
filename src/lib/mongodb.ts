@@ -3,10 +3,9 @@ import { MongoClient, type Db } from "mongodb"
 // Connection URL
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
 
-// Based on the MongoDB Compass screenshot, the correct path is:
-// Local > Cities > cities
-const DATABASE_NAME = "Local"
-const SUB_DATABASE = "Cities"
+// Based on the MongoDB Compass screenshot, the correct database is "Cities"
+// "Local" is just the connection name, not a database
+const DATABASE_NAME = "Cities"
 const COLLECTION_NAME = "cities"
 
 // Global caches for city search
@@ -45,10 +44,10 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     // Connect to MongoDB
     const client = await MongoClient.connect(MONGODB_URI)
 
-    // Connect to the correct database based on the screenshot
-    const db = client.db(DATABASE_NAME).db(SUB_DATABASE)
+    // Connect to the Cities database directly
+    const db = client.db(DATABASE_NAME)
 
-    console.log(`Connected to MongoDB database path: ${DATABASE_NAME} > ${SUB_DATABASE}`)
+    console.log(`Connected to MongoDB database: ${DATABASE_NAME}`)
 
     // Cache the connection
     cachedClient = client
