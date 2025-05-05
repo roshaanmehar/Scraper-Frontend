@@ -1,9 +1,63 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 
-// Cache for frequently searched cities
+// Improve the caching mechanism
 const cityCache = new Map<string, any[]>()
-const CACHE_EXPIRY = 1000 * 60 * 5 // 5 minutes
+const CACHE_EXPIRY = 1000 * 60 * 30 // Increase to 30 minutes for better performance
+
+// Add a prefetch cache for popular cities
+const POPULAR_CITIES = [
+  "London",
+  "Manchester",
+  "Birmingham",
+  "Leeds",
+  "Liverpool",
+  "Newcastle",
+  "Edinburgh",
+  "Glasgow",
+  "Cardiff",
+  "Belfast",
+  "Lincoln",
+]
+const popularCitiesCache: Record<string, any[]> = {}
+
+// Prefetch popular cities on module initialization
+async function prefetchPopularCities() {
+  try {
+    const { db } = await connectToDatabase()
+
+    for (const city of POPULAR_CITIES) {
+      const lowercaseCity = city.toLowerCase()
+      const results = await db
+        .collection("cities")
+        .find({
+          area_covered: {
+            $regex: `^${city}`,
+            $options: "i",
+          },
+        })
+        .sort({ area_covered: 1 })
+        .limit(10)
+        .toArray()
+
+      popularCitiesCache[lowercaseCity] = results
+
+      // Also cache partial matches (first 3+ characters)
+      if (city.length > 3) {
+        for (let i = 3; i < city.length; i++) {
+          const partial = city.substring(0, i).toLowerCase()
+          popularCitiesCache[partial] = results
+        }
+      }
+    }
+    console.log("Prefetched popular cities for faster search")
+  } catch (error) {
+    console.error("Error prefetching popular cities:", error)
+  }
+}
+
+// Call prefetch on module initialization
+prefetchPopularCities()
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +72,13 @@ export async function GET(request: NextRequest) {
     console.log(`Searching for cities with term: "${search}"`)
     const startTime = performance.now()
 
-    // Check cache first for faster responses
+    // Check if it's a popular city (exact or partial match)
+    if (popularCitiesCache[lowercaseSearch]) {
+      console.log(`Using prefetched popular city cache for "${search}"`)
+      return NextResponse.json(popularCitiesCache[lowercaseSearch])
+    }
+
+    // Check regular cache
     const cacheKey = lowercaseSearch
     if (cityCache.has(cacheKey)) {
       const cachedResult = cityCache.get(cacheKey)
