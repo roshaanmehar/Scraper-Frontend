@@ -100,7 +100,7 @@ export default async function SearchResultsPage({
       </div>
 
       <div className="results-summary">
-        Found {pagination.total} restaurants matching "{query}"
+        Found {pagination.total} restaurants matching "{query}" with valid emails
       </div>
 
       <div className="results-grid">
@@ -113,11 +113,13 @@ export default async function SearchResultsPage({
                   <span className="detail-label">Email:</span>
                   <div className="email-list">
                     {Array.isArray(restaurant.email) ? (
-                      restaurant.email.map((email, index) => (
-                        <span key={index} className="detail-value">
-                          {email}
-                        </span>
-                      ))
+                      restaurant.email
+                        .filter((email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "")
+                        .map((email, index) => (
+                          <span key={index} className="detail-value">
+                            {email}
+                          </span>
+                        ))
                     ) : (
                       <span className="detail-value">{restaurant.email}</span>
                     )}
@@ -149,7 +151,7 @@ export default async function SearchResultsPage({
             </div>
           ))
         ) : (
-          <div className="no-results">No restaurants found matching "{query}"</div>
+          <div className="no-results">No restaurants found matching "{query}" with valid emails</div>
         )}
       </div>
 
