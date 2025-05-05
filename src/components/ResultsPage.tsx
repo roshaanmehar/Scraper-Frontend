@@ -67,13 +67,16 @@ export default function ResultsPage() {
         const data = await response.json()
 
         if (data.collections && data.collections.length > 0) {
-          setCollections(data.collections)
+          // Filter out subsector_queue from collections
+          const filteredCollections = data.collections.filter((collection: string) => collection !== "subsector_queue")
+
+          setCollections(filteredCollections)
 
           // Set restaurants as the default collection if it exists
-          if (data.collections.includes("restaurants")) {
+          if (filteredCollections.includes("restaurants")) {
             setSelectedCollection("restaurants")
-          } else {
-            setSelectedCollection(data.collections[0])
+          } else if (filteredCollections.length > 0) {
+            setSelectedCollection(filteredCollections[0])
           }
         } else {
           // Fallback to restaurants if no collections returned
@@ -328,22 +331,6 @@ export default function ResultsPage() {
         <div className={styles.resultsHeader}>
           <div className={styles.resultsTitle}>
             <h2>Businesses with Email</h2>
-            {stats && (
-              <div className={styles.statsBar}>
-                <div className={styles.statItem}>
-                  <span className={styles.statLabel}>Total Records:</span>
-                  <span className={styles.statValue}>{stats.totalRecords}</span>
-                </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statLabel}>With Email:</span>
-                  <span className={styles.statValue}>{stats.recordsWithEmail}</span>
-                </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statLabel}>With Website:</span>
-                  <span className={styles.statValue}>{stats.recordsWithWebsite}</span>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className={styles.resultsActions}>
@@ -524,7 +511,7 @@ export default function ResultsPage() {
                   <p>No businesses with valid email addresses found in the "{selectedCollection}" collection.</p>
                   <div className={styles.helpText}>
                     <AlertCircle size={20} className={styles.alertIcon} />
-                    <p>
+                    <div>
                       Please check that:
                       <ul>
                         <li>The "Leeds" database exists in your MongoDB instance</li>
@@ -534,7 +521,7 @@ export default function ResultsPage() {
                       <a href="/api/test-db" target="_blank" rel="noopener noreferrer" className={styles.testLink}>
                         Run Database Test
                       </a>
-                    </p>
+                    </div>
                   </div>
                 </div>
               )}
