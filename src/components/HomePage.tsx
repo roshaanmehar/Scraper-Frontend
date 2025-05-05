@@ -5,7 +5,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Search, MapPin } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/HomePage.module.css"
 
@@ -24,6 +23,7 @@ export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [isSearchingCities, setIsSearchingCities] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false)
 
   // Clear error message when inputs change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: string) => void) => {
@@ -38,6 +38,7 @@ export default function HomePage() {
     const fetchCities = async () => {
       if (citySearch.trim().length < 2) {
         setCities([])
+        setShowCitySuggestions(false)
         return
       }
 
@@ -48,13 +49,16 @@ export default function HomePage() {
 
         if (data.status === "success") {
           setCities(data.cities)
+          setShowCitySuggestions(data.cities.length > 0)
         } else {
           console.error("Error fetching cities:", data.error)
           setCities([])
+          setShowCitySuggestions(false)
         }
       } catch (error) {
         console.error("Failed to fetch cities:", error)
         setCities([])
+        setShowCitySuggestions(false)
       } finally {
         setIsSearchingCities(false)
       }
@@ -68,6 +72,7 @@ export default function HomePage() {
     setSelectedCity(city)
     setCitySearch(city.area_covered)
     setCities([])
+    setShowCitySuggestions(false)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -98,30 +103,15 @@ export default function HomePage() {
 
   return (
     <AppLayout activeTab="home">
-      <motion.div
-        className={styles.homeContainer}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <motion.div
-          className={styles.mainConfigSection}
-          initial={{ y: 20 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
+      <div className={`${styles.homeContainer} ${styles.fadeIn}`}>
+        <div className={`${styles.mainConfigSection} ${styles.slideUp}`}>
           <h2 className={styles.sectionTitle}>Google Maps Business Scraper</h2>
 
           {errorMessage && (
-            <motion.div
-              className={styles.errorMessage}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-            >
+            <div className={`${styles.errorMessage} ${styles.slideInLeft}`}>
               <Search size={16} />
               <span>{errorMessage}</span>
-            </motion.div>
+            </div>
           )}
 
           <form onSubmit={handleSubmit}>
@@ -143,29 +133,17 @@ export default function HomePage() {
                   />
                   {isSearchingCities && <div className={styles.searchSpinner}></div>}
 
-                  <AnimatePresence>
-                    {cities.length > 0 && (
-                      <motion.div
-                        className={styles.citySuggestions}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                      >
-                        {cities.map((city) => (
-                          <motion.div
-                            key={city._id}
-                            className={styles.citySuggestion}
-                            onClick={() => selectCity(city)}
-                            whileHover={{ backgroundColor: "#f0f0f0" }}
-                          >
-                            <MapPin size={14} />
-                            <span>{city.area_covered}</span>
-                            <span className={styles.postcodeArea}>{city.postcode_area}</span>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {showCitySuggestions && (
+                    <div className={`${styles.citySuggestions} ${styles.fadeIn}`}>
+                      {cities.map((city) => (
+                        <div key={city._id} className={styles.citySuggestion} onClick={() => selectCity(city)}>
+                          <MapPin size={14} />
+                          <span>{city.area_covered}</span>
+                          <span className={styles.postcodeArea}>{city.postcode_area}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -186,12 +164,10 @@ export default function HomePage() {
             </div>
 
             <div className={styles.startButtonContainer}>
-              <motion.button
+              <button
                 type="submit"
                 className={`${styles.startButton} ${isLoading ? styles.loadingButton : ""}`}
                 disabled={isLoading}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
               >
                 {isLoading ? (
                   <>
@@ -202,11 +178,11 @@ export default function HomePage() {
                     <Search size={20} /> Start Scraper
                   </>
                 )}
-              </motion.button>
+              </button>
             </div>
           </form>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </AppLayout>
   )
 }
