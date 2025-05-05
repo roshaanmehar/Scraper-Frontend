@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import styles from "@/styles/HomePage.module.css"
+import styles from "../styles/HomePage.module.css"
 
 interface City {
   _id: string
@@ -253,9 +253,7 @@ export default function HomePage() {
                   <span className={styles.loadingSpinner}></span> Processing...
                 </>
               ) : (
-                <>
-                  🔍 Start Scraper
-                </>
+                <>🔍 Start Scraper</>
               )}
             </button>
           </div>
