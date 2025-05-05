@@ -2,10 +2,11 @@ import type React from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import "../styles.css"
+import "./loading.css"
 
 export const metadata: Metadata = {
-  title: "Web Scraper App",
-  description: "A simple web scraper application",
+  title: "Restaurant Scraper",
+  description: "A simple restaurant scraper application",
 }
 
 export default function RootLayout({
@@ -23,7 +24,7 @@ export default function RootLayout({
       <body>
         <nav className="navbar">
           <div className="nav-container">
-            <div className="logo">Web Scraper</div>
+            <div className="logo">Restaurant Scraper</div>
             <ul className="nav-menu">
               <li className="nav-item">
                 <Link href="/" className="nav-link">
