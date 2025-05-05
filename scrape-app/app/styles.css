@@ -23,6 +23,9 @@
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .city-option:last-child {
@@ -35,14 +38,6 @@
   
   .city-name {
     font-weight: 500;
-    margin-bottom: 4px;
-  }
-  
-  .city-details {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    color: #666;
   }
   
   .postcode-area {
@@ -51,10 +46,7 @@
     background-color: #f0f0f0;
     padding: 2px 6px;
     border-radius: 3px;
-  }
-  
-  .population {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
   
   .no-results {
@@ -69,44 +61,29 @@
     background-color: #f9f9f9;
     border-radius: 4px;
     padding: 12px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
     border: 1px solid #eee;
   }
   
   .info-item {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .info-label {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #666;
-    margin-bottom: 2px;
   }
   
   .info-value {
     font-weight: 500;
+    background-color: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
   }
   
   .disabled-link {
     pointer-events: none;
-  }
-  
-  .error-message {
-    color: #e53e3e;
-    margin-top: 8px;
-    font-size: 0.9rem;
-  }
-  
-  .debug-info {
-    color: #3182ce;
-    margin-top: 8px;
-    font-size: 0.9rem;
-    background-color: #ebf8ff;
-    padding: 4px 8px;
-    border-radius: 4px;
   }
   
   .search-loader {
@@ -128,12 +105,6 @@
     }
     100% {
       transform: translateY(-50%) rotate(360deg);
-    }
-  }
-  
-  @media (max-width: 576px) {
-    .selected-city-info {
-      grid-template-columns: 1fr;
     }
   }
   
