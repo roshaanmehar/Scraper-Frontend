@@ -1,130 +1,107 @@
 "use server"
 
-import clientPromise from "../lib/mongodb"
+import { MongoClient } from "mongodb"
+import { cache } from "react"
+import type { City } from "./types"
 
-export type Restaurant = {
-  _id: string
-  businessname: string
-  phonenumber?: number | string
-  address?: string
-  email?: string | string[]
-  website?: string
-  stars?: string
-  numberofreviews?: number
-  subsector?: string
-  scraped_at?: Date | string | null
-  emailstatus?: string
-  emailscraped_at?: Date | string | null
+// MongoDB connection setup
+if (!process.env.MONGODB_URI) {
+  throw new Error("Please add your MongoDB URI to .env.local")
 }
 
-export async function getRestaurants(page = 1, limit = 6) {
-  try {
-    const client = await clientPromise
-    const db = client.db("Leeds") // Database name specified here
+const uri = process.env.MONGODB_URI as string
+const options = {}
 
-    // Calculate skip value for pagination
-    const skip = (page - 1) * limit
+let client
+let clientPromise: Promise<MongoClient>
 
-    // Get total count for pagination
-    const totalCount = await db.collection("restaurants").countDocuments()
-
-    // Fetch restaurants with pagination
-    const restaurants = await db
-      .collection("restaurants")
-      .find({})
-      .sort({ scraped_at: -1 }) // Sort by most recently scraped
-      .skip(skip)
-      .limit(limit)
-      .toArray()
-
-    // Convert MongoDB documents to plain objects
-    const serializedRestaurants = restaurants.map((restaurant) => ({
-      ...restaurant,
-      _id: restaurant._id.toString(),
-      scraped_at: restaurant.scraped_at ? new Date(restaurant.scraped_at).toISOString() : null,
-      emailscraped_at: restaurant.emailscraped_at ? new Date(restaurant.emailscraped_at).toISOString() : null,
-    }))
-
-    return {
-      restaurants: serializedRestaurants as Restaurant[],
-      pagination: {
-        total: totalCount,
-        pages: Math.ceil(totalCount / limit),
-        currentPage: page,
-        limit,
-      },
-    }
-  } catch (error) {
-    console.error("Error fetching restaurants:", error)
-    return {
-      restaurants: [],
-      pagination: {
-        total: 0,
-        pages: 0,
-        currentPage: page,
-        limit,
-      },
-    }
+if (process.env.NODE_ENV === "development") {
+  // In development mode, use a global variable so that the value
+  // is preserved across module reloads caused by HMR (Hot Module Replacement).
+  const globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>
   }
+
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(uri, options)
+    globalWithMongo._mongoClientPromise = client.connect()
+  }
+  clientPromise = globalWithMongo._mongoClientPromise
+} else {
+  // In production mode, it's best to not use a global variable.
+  client = new MongoClient(uri, options)
+  clientPromise = client.connect()
 }
 
-export async function searchRestaurants(query: string, page = 1, limit = 6) {
+// In-memory cache for city searches
+const cityCache = new Map<string, { cities: City[]; timestamp: number }>()
+const CACHE_TTL = 1000 * 60 * 60 // 1 hour cache TTL
+
+// Cached function to search cities
+export const searchCities = cache(async (query: string): Promise<City[]> => {
+  // Normalize query for consistent caching
+  const normalizedQuery = query.trim().toLowerCase()
+
+  // Return early if query is too short
+  if (normalizedQuery.length < 2) {
+    return []
+  }
+
+  // Check cache first
+  const cacheKey = `city:${normalizedQuery}`
+  const cachedResult = cityCache.get(cacheKey)
+  const now = Date.now()
+
+  if (cachedResult && now - cachedResult.timestamp < CACHE_TTL) {
+    console.log(`Cache hit for "${normalizedQuery}"`)
+    return cachedResult.cities
+  }
+
+  console.log(`Cache miss for "${normalizedQuery}", fetching from MongoDB...`)
+
   try {
     const client = await clientPromise
-    const db = client.db("Leeds") // Database name specified here
+    const db = client.db("Local") // Database name from the screenshot
 
-    // Create search filter
+    // Create search filter for city names
     const filter = {
-      $or: [
-        { businessname: { $regex: query, $options: "i" } },
-        { address: { $regex: query, $options: "i" } },
-        { email: { $regex: query, $options: "i" } },
-        { subsector: { $regex: query, $options: "i" } },
-      ],
+      area_covered: { $regex: normalizedQuery, $options: "i" },
     }
 
-    // Calculate skip value for pagination
-    const skip = (page - 1) * limit
-
-    // Get total count for pagination
-    const totalCount = await db.collection("restaurants").countDocuments(filter)
-
-    // Fetch restaurants with pagination
-    const restaurants = await db
-      .collection("restaurants")
-      .find(filter)
-      .sort({ scraped_at: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray()
+    // Get matching cities, limit to 10 for performance
+    const cities = await db.collection("Cities.cities").find(filter).limit(10).toArray()
 
     // Convert MongoDB documents to plain objects
-    const serializedRestaurants = restaurants.map((restaurant) => ({
-      ...restaurant,
-      _id: restaurant._id.toString(),
-      scraped_at: restaurant.scraped_at ? new Date(restaurant.scraped_at).toISOString() : null,
-      emailscraped_at: restaurant.emailscraped_at ? new Date(restaurant.emailscraped_at).toISOString() : null,
+    const serializedCities = cities.map((city) => ({
+      ...city,
+      _id: city._id.toString(),
     }))
 
-    return {
-      restaurants: serializedRestaurants as Restaurant[],
-      pagination: {
-        total: totalCount,
-        pages: Math.ceil(totalCount / limit),
-        currentPage: page,
-        limit,
-      },
+    // Store in cache
+    cityCache.set(cacheKey, {
+      cities: serializedCities as City[],
+      timestamp: now,
+    })
+
+    // Clean up old cache entries periodically
+    if (Math.random() < 0.1) {
+      // 10% chance to clean up on each request
+      cleanupCache()
     }
+
+    return serializedCities as City[]
   } catch (error) {
-    console.error("Error searching restaurants:", error)
-    return {
-      restaurants: [],
-      pagination: {
-        total: 0,
-        pages: 0,
-        currentPage: page,
-        limit,
-      },
+    console.error("Error searching cities in MongoDB:", error)
+    return []
+  }
+})
+
+// Helper function to clean up expired cache entries
+function cleanupCache() {
+  const now = Date.now()
+  for (const [key, value] of cityCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      cityCache.delete(key)
     }
   }
 }
