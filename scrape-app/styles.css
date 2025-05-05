@@ -418,15 +418,6 @@
   
     .results-grid {
       grid-template-columns: 1fr;
-      \
-    }
-    {
-    .container {
-      padding: 1.5rem;
-    }
-  
-    .results-grid {
-      grid-template-columns: 1fr;
     }
   
     .pagination {

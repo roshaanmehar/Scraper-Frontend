@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import type { Restaurant } from "./actions"
@@ -28,6 +28,7 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
   const [pagination, setPagination] = useState(initialPagination)
   const [isLoading, setIsLoading] = useState(false)
   const [sortOption, setSortOption] = useState("recent")
+  const isInitialMount = useRef(true)
 
   // Debounce function to prevent too many requests while typing
   const debounce = (func: Function, delay: number) => {
@@ -43,21 +44,28 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
   // Function to fetch search results
   const fetchSearchResults = useCallback(
     async (searchQuery: string, page = 1) => {
-      if (!searchQuery.trim()) {
-        // If search is empty, redirect to main results page
-        router.push("/results")
+      // Don't refresh or redirect if search is empty, just use the current data
+      if (!searchQuery.trim() && isInitialMount.current) {
+        isInitialMount.current = false
         return
       }
 
       setIsLoading(true)
       try {
-        // Update URL without full page reload
-        const params = new URLSearchParams()
-        params.set("query", searchQuery)
-        if (page > 1) params.set("page", page.toString())
+        // Update URL without full page reload only if we have a query
+        if (searchQuery.trim()) {
+          const params = new URLSearchParams()
+          params.set("query", searchQuery)
+          if (page > 1) params.set("page", page.toString())
 
-        // Update the URL to reflect the search
-        router.push(`/results/search?${params.toString()}`, { scroll: false })
+          // Update the URL to reflect the search
+          router.push(`/results/search?${params.toString()}`, { scroll: false })
+        } else {
+          // If search is empty but not initial mount, stay on current page with current data
+          if (!isInitialMount.current) {
+            return
+          }
+        }
 
         // Fetch results from API
         const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}&page=${page}`)
@@ -69,6 +77,7 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
         console.error("Error fetching search results:", error)
       } finally {
         setIsLoading(false)
+        isInitialMount.current = false
       }
     },
     [router],
@@ -155,6 +164,98 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
     fetchSearchResults(query, page)
   }
 
+  // Function to export data as CSV
+  const exportToCSV = () => {
+    // Only export restaurants with valid emails
+    const restaurantsToExport = restaurants.filter((restaurant) => {
+      if (!restaurant.email) return false
+
+      if (Array.isArray(restaurant.email)) {
+        return restaurant.email.some(
+          (email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "" && email.includes("@"),
+        )
+      }
+
+      return (
+        restaurant.email !== "N/A" &&
+        restaurant.email !== "n/a" &&
+        restaurant.email.trim() !== "" &&
+        restaurant.email.includes("@")
+      )
+    })
+
+    // If no restaurants to export, show alert
+    if (restaurantsToExport.length === 0) {
+      alert("No restaurants with valid emails to export")
+      return
+    }
+
+    // Create CSV header
+    const headers = ["Business Name", "Email", "Phone", "Website", "Reviews"]
+
+    // Create CSV rows
+    const csvRows = [headers.join(",")]
+
+    restaurantsToExport.forEach((restaurant) => {
+      // Format emails
+      let emails = ""
+      if (Array.isArray(restaurant.email)) {
+        emails = restaurant.email
+          .filter((email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "")
+          .join("; ")
+      } else if (restaurant.email) {
+        emails = restaurant.email
+      }
+
+      // Format phone
+      const phone = restaurant.phonenumber || ""
+
+      // Format website
+      const website = restaurant.website || ""
+
+      // Format reviews
+      const reviews = restaurant.numberofreviews || 0
+
+      // Escape fields for CSV
+      const escapeCsvField = (field: string | number) => {
+        const stringField = String(field)
+        // If field contains comma, quote, or newline, wrap in quotes and escape quotes
+        if (stringField.includes(",") || stringField.includes('"') || stringField.includes("\n")) {
+          return `"${stringField.replace(/"/g, '""')}"`
+        }
+        return stringField
+      }
+
+      // Create row
+      const row = [
+        escapeCsvField(restaurant.businessname),
+        escapeCsvField(emails),
+        escapeCsvField(phone),
+        escapeCsvField(website),
+        escapeCsvField(reviews),
+      ].join(",")
+
+      csvRows.push(row)
+    })
+
+    // Create CSV content
+    const csvContent = csvRows.join("\n")
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+
+    // Create download link and click it
+    const link = document.createElement("a")
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `restaurants-export-${timestamp}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <>
       <div className="card">
@@ -181,7 +282,9 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
               </select>
             </div>
 
-            <button className="btn btn-secondary">Export</button>
+            <button className="btn btn-secondary" onClick={exportToCSV}>
+              Export
+            </button>
           </div>
         </div>
       </div>
