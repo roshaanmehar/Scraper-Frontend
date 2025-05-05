@@ -430,3 +430,58 @@
     display: none;
   }
   
+  /* Export dropdown styles */
+  .export-container {
+    position: relative;
+  }
+  
+  .export-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    min-width: 180px;
+    margin-top: 5px;
+  }
+  
+  .export-dropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .export-dropdown button:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .export-dropdown button:not(:last-child) {
+    border-bottom: 1px solid #eee;
+  }
+  
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+  }
+  
+  /* Enhanced sorting styles */
+  .sort-select {
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 15px;
+    appearance: none;
+  }
+  
