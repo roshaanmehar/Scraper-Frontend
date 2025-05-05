@@ -26,8 +26,55 @@ export default function ScrapePage() {
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Start searching immediately when component mounts
+  useEffect(() => {
+    if (city.trim().length >= 2) {
+      handleCitySearch(city)
+    }
+  }, [])
+
+  // Search cities function
+  const handleCitySearch = async (value: string) => {
+    if (value.trim().length < 2) {
+      setCityResults([])
+      setShowDropdown(false)
+      setSelectedCity(null)
+      return
+    }
+
+    setIsSearching(true)
+    setShowDropdown(true)
+    setError(null)
+    setDebugInfo(null)
+
+    try {
+      console.log(`Searching for city: ${value}`)
+      // Use the API endpoint
+      const response = await fetch(`/api/cities?query=${encodeURIComponent(value)}`)
+
+      if (!response.ok) {
+        throw new Error(`Search failed with status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log(`Received ${data.cities?.length || 0} cities from API`)
+
+      setCityResults(data.cities || [])
+
+      // Set debug info
+      setDebugInfo(`Search for "${value}" returned ${data.cities?.length || 0} results`)
+    } catch (error) {
+      console.error("Error searching cities:", error)
+      setError("Failed to search cities. Please try again.")
+      setCityResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
 
   // Debounce function to prevent too many requests while typing
   const debounce = (func: Function, delay: number) => {
@@ -40,46 +87,15 @@ export default function ScrapePage() {
     }
   }
 
-  // Search cities when input changes
-  const handleCityInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Debounced search function
+  const debouncedSearch = debounce(handleCitySearch, 300)
+
+  // Handle input change
+  const handleCityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setCity(value)
-    setError(null)
-
-    if (value.trim().length < 2) {
-      setCityResults([])
-      setShowDropdown(false)
-      setSelectedCity(null)
-      return
-    }
-
-    setIsSearching(true)
-    setShowDropdown(true)
-
-    try {
-      console.log(`Searching for city: ${value}`)
-      // Use the API endpoint instead of direct server action
-      const response = await fetch(`/api/cities?query=${encodeURIComponent(value)}`)
-
-      if (!response.ok) {
-        throw new Error(`Search failed with status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log(`Received ${data.cities?.length || 0} cities from API`)
-
-      setCityResults(data.cities || [])
-    } catch (error) {
-      console.error("Error searching cities:", error)
-      setError("Failed to search cities. Please try again.")
-      setCityResults([])
-    } finally {
-      setIsSearching(false)
-    }
+    debouncedSearch(value)
   }
-
-  // Debounced search function
-  const debouncedSearch = debounce(handleCityInputChange, 300)
 
   // Handle city selection from dropdown
   const handleCitySelect = (city: City) => {
@@ -120,10 +136,7 @@ export default function ScrapePage() {
               name="city"
               placeholder="Enter city name"
               value={city}
-              onChange={(e) => {
-                setCity(e.target.value)
-                debouncedSearch(e)
-              }}
+              onChange={handleCityInputChange}
               ref={inputRef}
               autoComplete="off"
             />
@@ -150,6 +163,7 @@ export default function ScrapePage() {
             )}
 
             {error && <div className="error-message">{error}</div>}
+            {debugInfo && <div className="debug-info">{debugInfo}</div>}
           </div>
 
           {selectedCity && (
@@ -200,6 +214,15 @@ export default function ScrapePage() {
             Start
           </button>
         </Link>
+
+        {/* Debug button to manually trigger search */}
+        <button
+          className="btn btn-outline debug-button"
+          onClick={() => handleCitySearch(city)}
+          style={{ marginTop: "10px" }}
+        >
+          Debug: Search Again
+        </button>
       </div>
     </div>
   )
