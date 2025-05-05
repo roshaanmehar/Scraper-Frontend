@@ -100,6 +100,37 @@
     font-size: 0.9rem;
   }
   
+  .debug-info {
+    color: #3182ce;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    background-color: #ebf8ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  
+  .search-loader {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: translateY(-50%) rotate(0deg);
+    }
+    100% {
+      transform: translateY(-50%) rotate(360deg);
+    }
+  }
+  
   @media (max-width: 576px) {
     .selected-city-info {
       grid-template-columns: 1fr;
