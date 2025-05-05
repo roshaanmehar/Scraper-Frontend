@@ -223,3 +223,89 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
     }
   }
 }
+
+export async function getAllRestaurants(query = "", sortBy = "recent") {
+  try {
+    console.log(`Fetching all restaurants matching "${query}" for export...`)
+    const client = await clientPromise
+    const db = client.db("Leeds") // Database name specified here
+
+    // Try to convert query to number for phonenumber search
+    let phoneQuery = null
+    if (!isNaN(Number(query))) {
+      phoneQuery = Number(query)
+    }
+
+    // Create search filter with improved phone number search
+    // Only include restaurants that have emails
+    const filter = query
+      ? {
+          $and: [
+            {
+              email: {
+                $exists: true,
+                $ne: null,
+                $ne: [],
+                $ne: "N/A",
+                $ne: "n/a",
+              },
+            },
+            {
+              $or: [
+                { businessname: { $regex: query, $options: "i" } },
+                ...(phoneQuery !== null
+                  ? [{ phonenumber: phoneQuery }]
+                  : [{ phonenumber: { $regex: query, $options: "i" } }]),
+                { email: { $regex: query, $options: "i" } },
+                { subsector: { $regex: query, $options: "i" } },
+              ],
+            },
+          ],
+        }
+      : {
+          email: {
+            $exists: true,
+            $ne: null,
+            $ne: [],
+            $ne: "N/A",
+            $ne: "n/a",
+          },
+        }
+
+    // Determine sort order
+    let sortOptions = {}
+    switch (sortBy) {
+      case "name":
+        sortOptions = { businessname: 1 }
+        break
+      case "reviews":
+        sortOptions = { numberofreviews: -1 }
+        break
+      case "recent":
+      default:
+        sortOptions = { scraped_at: -1 }
+        break
+    }
+
+    // Get all restaurants that match the filter
+    const allRestaurants = await db.collection("restaurants").find(filter).sort(sortOptions).toArray()
+
+    // Filter restaurants with valid emails
+    const validEmailRestaurants = allRestaurants.filter(hasValidEmail)
+
+    console.log(`Found ${validEmailRestaurants.length} restaurants with valid emails for export`)
+
+    // Convert MongoDB documents to plain objects
+    const serializedRestaurants = validEmailRestaurants.map((restaurant) => ({
+      ...restaurant,
+      _id: restaurant._id.toString(),
+      scraped_at: restaurant.scraped_at ? new Date(restaurant.scraped_at).toISOString() : null,
+      emailscraped_at: restaurant.emailscraped_at ? new Date(restaurant.emailscraped_at).toISOString() : null,
+    }))
+
+    return serializedRestaurants as Restaurant[]
+  } catch (error) {
+    console.error("Error fetching all restaurants for export:", error)
+    return []
+  }
+}
