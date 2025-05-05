@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { getRestaurants } from "@/app/actions"
+import { getRestaurants } from "../actions"
 
 export default async function ResultsPage({
   searchParams,
