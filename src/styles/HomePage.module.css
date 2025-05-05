@@ -503,6 +503,38 @@
 .selectedInput {
   background-color: #f0f7ff;
   border-color: #3b82f6;
+  padding-right: 40px; /* Make room for the check icon */
+}
+
+.selectedIndicator {
+  position: absolute;
+  right: 40px; /* Position to the left of the clear button */
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #3b82f6;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+.checkIcon {
+  stroke-width: 3;
 }
 
 .searchSpinner {
@@ -582,10 +614,14 @@
   align-items: center;
   gap: 10px;
   transition: background-color 0.15s;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.citySuggestion:hover,
-.focused {
+.citySuggestion:last-child {
+  border-bottom: none;
+}
+
+.citySuggestion:hover {
   background-color: #f0f7ff;
 }
 
@@ -617,6 +653,25 @@
   color: #666;
   text-align: center;
   font-style: italic;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.manualEntryButton {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.manualEntryButton:hover {
+  background-color: #f0f7ff;
+  text-decoration: underline;
 }
 
 .startButtonContainer {
@@ -704,8 +759,11 @@
   border-color: #475569;
 }
 
-.dark-theme .citySuggestion:hover,
-.dark-theme .focused {
+.dark-theme .citySuggestion {
+  border-bottom-color: #334155;
+}
+
+.dark-theme .citySuggestion:hover {
   background-color: #334155;
 }
 
@@ -716,6 +774,14 @@
 
 .dark-theme .noResults {
   color: #94a3b8;
+}
+
+.dark-theme .manualEntryButton {
+  color: #60a5fa;
+}
+
+.dark-theme .manualEntryButton:hover {
+  background-color: #1e3a8a;
 }
 
 .dark-theme .clearButton {
