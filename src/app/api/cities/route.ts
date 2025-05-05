@@ -35,21 +35,15 @@ export async function GET(request: NextRequest) {
       const { db } = await connectToDatabase()
 
       // Log the database and collection we're using
-      console.log(`Using database: ${db.databaseName}, searching in 'cities' collection`)
+      console.log(`Using database path: ${db.databaseName}, searching in 'cities' collection`)
 
       // Get a count of documents in the collection
       const count = await db.collection("cities").countDocuments()
       console.log(`Total documents in cities collection: ${count}`)
 
-      // Try different field names in case the schema is different
+      // Simple query focusing on area_covered which we know exists in your documents
       const query = {
-        $or: [
-          // Try different possible field names for city names
-          { area_covered: { $regex: `^${search}`, $options: "i" } },
-          { name: { $regex: `^${search}`, $options: "i" } },
-          { city: { $regex: `^${search}`, $options: "i" } },
-          { city_name: { $regex: `^${search}`, $options: "i" } },
-        ],
+        area_covered: { $regex: `^${search}`, $options: "i" },
       }
 
       console.log("Search query:", JSON.stringify(query))
@@ -59,12 +53,7 @@ export async function GET(request: NextRequest) {
       // If no results with prefix search, try a contains search
       if (cities.length === 0) {
         const containsQuery = {
-          $or: [
-            { area_covered: { $regex: search, $options: "i" } },
-            { name: { $regex: search, $options: "i" } },
-            { city: { $regex: search, $options: "i" } },
-            { city_name: { $regex: search, $options: "i" } },
-          ],
+          area_covered: { $regex: search, $options: "i" },
         }
 
         console.log("Fallback contains query:", JSON.stringify(containsQuery))
@@ -76,13 +65,6 @@ export async function GET(request: NextRequest) {
 
       if (cities.length > 0) {
         console.log("Sample result:", JSON.stringify(cities[0]))
-      } else {
-        // If still no results, let's check what fields are available in the documents
-        const sampleCity = await db.collection("cities").findOne()
-        if (sampleCity) {
-          console.log("Available fields in city documents:", Object.keys(sampleCity))
-          console.log("Sample document:", JSON.stringify(sampleCity))
-        }
       }
 
       // Cache the results for future requests
