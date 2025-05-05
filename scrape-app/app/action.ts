@@ -5,22 +5,22 @@ import clientPromise from "../lib/mongodb"
 export type Restaurant = {
   _id: string
   businessname: string
-  phonenumber: number
-  address: string
-  email: string[]
-  website: string
-  stars: string
-  numberofreviews: number
-  subsector: string
-  scraped_at: Date
-  emailstatus: string
-  emailscraped_at: Date
+  phonenumber?: number | string
+  address?: string
+  email?: string | string[]
+  website?: string
+  stars?: string
+  numberofreviews?: number
+  subsector?: string
+  scraped_at?: Date | string | null
+  emailstatus?: string
+  emailscraped_at?: Date | string | null
 }
 
 export async function getRestaurants(page = 1, limit = 6) {
   try {
     const client = await clientPromise
-    const db = client.db("Leeds") // Database name specified here, not in env
+    const db = client.db("Leeds") // Database name specified here
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit
@@ -71,7 +71,7 @@ export async function getRestaurants(page = 1, limit = 6) {
 export async function searchRestaurants(query: string, page = 1, limit = 6) {
   try {
     const client = await clientPromise
-    const db = client.db("Leeds") // Database name specified here, not in env
+    const db = client.db("Leeds") // Database name specified here
 
     // Create search filter
     const filter = {
