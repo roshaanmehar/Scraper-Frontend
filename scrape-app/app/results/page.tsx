@@ -1,13 +1,97 @@
 import Link from "next/link"
-import { getRestaurants } from "./actions"
+
+// Mock data to use until MongoDB is properly connected
+const MOCK_RESTAURANTS = [
+  {
+    _id: "1",
+    businessname: "Malt Shovel",
+    phonenumber: 1132637082,
+    address: "21 Crab Ln, Armley, Leeds LS12 3AG",
+    email: ["7851@greeneking.co.uk"],
+    website: "https://www.greeneking.co.uk/pubs/west-yorkshire/malt-shovel-leeds",
+    stars: "4.2",
+    numberofreviews: 403,
+    subsector: "LS12 5",
+    emailstatus: "found",
+  },
+  {
+    _id: "2",
+    businessname: "The Adelphi",
+    phonenumber: 1132453950,
+    address: "3-5 Hunslet Rd, Leeds LS10 1JQ",
+    email: ["adelphi.leeds@craft-pubs.co.uk"],
+    website: "https://www.craft-pubs.co.uk/adelphi-leeds",
+    stars: "4.4",
+    numberofreviews: 1250,
+    subsector: "LS10 1",
+    emailstatus: "found",
+  },
+  {
+    _id: "3",
+    businessname: "Whitelock's Ale House",
+    phonenumber: 1132453950,
+    address: "Turk's Head Yard, Leeds LS1 6HB",
+    email: ["info@whitelocksleeds.com"],
+    website: "https://www.whitelocksleeds.com",
+    stars: "4.6",
+    numberofreviews: 1876,
+    subsector: "LS1 6",
+    emailstatus: "found",
+  },
+  {
+    _id: "4",
+    businessname: "The Midnight Bell",
+    phonenumber: 1132444044,
+    address: "101 Water Ln, Leeds LS11 5QN",
+    email: ["midnightbell@leedsbrewery.co.uk"],
+    website: "https://www.midnightbell.co.uk",
+    stars: "4.3",
+    numberofreviews: 987,
+    subsector: "LS11 5",
+    emailstatus: "found",
+  },
+  {
+    _id: "5",
+    businessname: "North Bar",
+    phonenumber: 1132429674,
+    address: "24 New Briggate, Leeds LS1 6NU",
+    email: ["info@northbar.com"],
+    website: "https://www.northbar.com",
+    stars: "4.5",
+    numberofreviews: 1120,
+    subsector: "LS1 6",
+    emailstatus: "found",
+  },
+  {
+    _id: "6",
+    businessname: "Belgrave Music Hall",
+    phonenumber: 1132346160,
+    address: "1-1A Cross Belgrave St, Leeds LS2 8JP",
+    email: ["info@belgravemusichall.com", "events@belgravemusichall.com"],
+    website: "https://www.belgravemusichall.com",
+    stars: "4.4",
+    numberofreviews: 2150,
+    subsector: "LS2 8",
+    emailstatus: "found",
+  },
+]
 
 export default async function ResultsPage({
   searchParams,
 }: {
   searchParams: { page?: string; query?: string }
 }) {
+  // Use mock data for now
+  const restaurants = MOCK_RESTAURANTS
   const page = searchParams.page ? Number.parseInt(searchParams.page) : 1
-  const { restaurants, pagination } = await getRestaurants(page)
+
+  // Mock pagination data
+  const pagination = {
+    total: 42, // Mock total count
+    pages: 7, // Mock total pages
+    currentPage: page,
+    limit: 6,
+  }
 
   // Generate pagination numbers
   const paginationNumbers = []
@@ -80,7 +164,12 @@ export default async function ResultsPage({
         </div>
       </div>
 
-      <div className="results-summary">Found {pagination.total} restaurants</div>
+      <div className="results-summary">
+        Found {pagination.total} restaurants
+        <div className="mongodb-notice">
+          <strong>Note:</strong> To use real MongoDB data, run: <code>npm install mongodb</code>
+        </div>
+      </div>
 
       <div className="results-grid">
         {restaurants.length > 0 ? (
