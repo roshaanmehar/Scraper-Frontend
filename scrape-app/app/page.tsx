@@ -25,6 +25,7 @@ export default function ScrapePage() {
   const [cityResults, setCityResults] = useState<City[]>([])
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -43,6 +44,7 @@ export default function ScrapePage() {
   const handleCityInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setCity(value)
+    setError(null)
 
     if (value.trim().length < 2) {
       setCityResults([])
@@ -55,13 +57,21 @@ export default function ScrapePage() {
     setShowDropdown(true)
 
     try {
+      console.log(`Searching for city: ${value}`)
       // Use the API endpoint instead of direct server action
       const response = await fetch(`/api/cities?query=${encodeURIComponent(value)}`)
-      if (!response.ok) throw new Error("Failed to fetch cities")
+
+      if (!response.ok) {
+        throw new Error(`Search failed with status: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log(`Received ${data.cities?.length || 0} cities from API`)
+
       setCityResults(data.cities || [])
     } catch (error) {
       console.error("Error searching cities:", error)
+      setError("Failed to search cities. Please try again.")
       setCityResults([])
     } finally {
       setIsSearching(false)
@@ -138,6 +148,8 @@ export default function ScrapePage() {
                 <div className="no-results">No cities found</div>
               </div>
             )}
+
+            {error && <div className="error-message">{error}</div>}
           </div>
 
           {selectedCity && (
