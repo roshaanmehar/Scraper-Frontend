@@ -94,6 +94,12 @@
     pointer-events: none;
   }
   
+  .error-message {
+    color: #e53e3e;
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+  
   @media (max-width: 576px) {
     .selected-city-info {
       grid-template-columns: 1fr;
