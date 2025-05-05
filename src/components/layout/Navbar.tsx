@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { Database, Search, Sun, Moon } from "lucide-react"
 import styles from "@/styles/layout/Navbar.module.css"
 
 interface NavbarProps {
@@ -19,12 +18,12 @@ export default function Navbar({ activeTab, isDarkMode, toggleTheme }: NavbarPro
 
       <div className={styles.navTabs}>
         <Link href="/" className={`${styles.navTab} ${activeTab === "home" ? styles.activeNavTab : ""}`}>
-          <Search size={18} />
+          <span>🔍</span>
           <span>Scraper</span>
         </Link>
 
         <Link href="/results" className={`${styles.navTab} ${activeTab === "results" ? styles.activeNavTab : ""}`}>
-          <Database size={18} />
+          <span>📊</span>
           <span>Results</span>
         </Link>
       </div>
@@ -35,7 +34,7 @@ export default function Navbar({ activeTab, isDarkMode, toggleTheme }: NavbarPro
           onClick={toggleTheme}
           aria-label="Toggle theme"
         >
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          {isDarkMode ? "☀️" : "🌙"}
         </button>
       </div>
     </div>
