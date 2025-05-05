@@ -4,13 +4,18 @@ import { getRestaurants } from "./actions"
 export default async function ResultsPage({
   searchParams,
 }: {
-  searchParams: { page?: string; query?: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }) {
-  // Properly handle the page parameter - await searchParams
-  const page = searchParams?.page ? Number.parseInt(searchParams.page) : 1
+  // Safely access page parameter
+  const pageStr = searchParams.page || "1"
+  const page = typeof pageStr === "string" ? Number.parseInt(pageStr, 10) : 1
+
+  console.log(`Fetching page ${page} from MongoDB...`)
 
   // Get data from MongoDB
   const { restaurants, pagination } = await getRestaurants(page)
+
+  console.log(`Received ${restaurants.length} restaurants from MongoDB`)
 
   // Generate pagination numbers
   const paginationNumbers = []

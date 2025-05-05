@@ -48,14 +48,20 @@ if (process.env.NODE_ENV === "development") {
 
 export async function getRestaurants(page = 1, limit = 6) {
   try {
+    console.log("Connecting to MongoDB...")
     const client = await clientPromise
+    console.log("Connected to MongoDB")
+
     const db = client.db("Leeds") // Database name specified here
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit
 
+    console.log(`Fetching restaurants with skip=${skip}, limit=${limit}`)
+
     // Get total count for pagination
     const totalCount = await db.collection("restaurants").countDocuments()
+    console.log(`Total restaurants: ${totalCount}`)
 
     // Fetch restaurants with pagination
     const restaurants = await db
@@ -65,6 +71,8 @@ export async function getRestaurants(page = 1, limit = 6) {
       .skip(skip)
       .limit(limit)
       .toArray()
+
+    console.log(`Fetched ${restaurants.length} restaurants from MongoDB`)
 
     // Convert MongoDB documents to plain objects
     const serializedRestaurants = restaurants.map((restaurant) => ({
@@ -84,7 +92,7 @@ export async function getRestaurants(page = 1, limit = 6) {
       },
     }
   } catch (error) {
-    console.error("Error fetching restaurants:", error)
+    console.error("Error fetching restaurants from MongoDB:", error)
     return {
       restaurants: [],
       pagination: {
@@ -99,6 +107,7 @@ export async function getRestaurants(page = 1, limit = 6) {
 
 export async function searchRestaurants(query: string, page = 1, limit = 6) {
   try {
+    console.log(`Searching for "${query}" in MongoDB...`)
     const client = await clientPromise
     const db = client.db("Leeds") // Database name specified here
 
@@ -117,6 +126,7 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
 
     // Get total count for pagination
     const totalCount = await db.collection("restaurants").countDocuments(filter)
+    console.log(`Found ${totalCount} matching restaurants`)
 
     // Fetch restaurants with pagination
     const restaurants = await db
@@ -126,6 +136,8 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
       .skip(skip)
       .limit(limit)
       .toArray()
+
+    console.log(`Fetched ${restaurants.length} restaurants from search`)
 
     // Convert MongoDB documents to plain objects
     const serializedRestaurants = restaurants.map((restaurant) => ({
@@ -145,7 +157,7 @@ export async function searchRestaurants(query: string, page = 1, limit = 6) {
       },
     }
   } catch (error) {
-    console.error("Error searching restaurants:", error)
+    console.error("Error searching restaurants in MongoDB:", error)
     return {
       restaurants: [],
       pagination: {

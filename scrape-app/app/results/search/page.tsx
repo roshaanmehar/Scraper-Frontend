@@ -4,13 +4,21 @@ import { searchRestaurants } from "../actions"
 export default async function SearchResultsPage({
   searchParams,
 }: {
-  searchParams: { query: string; page?: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }) {
-  // Properly handle searchParams - direct access without intermediate variables
-  const query = searchParams?.query || ""
-  const page = searchParams?.page ? Number.parseInt(searchParams.page) : 1
+  // Safely access search parameters
+  const queryParam = searchParams.query || ""
+  const query = typeof queryParam === "string" ? queryParam : ""
 
+  const pageStr = searchParams.page || "1"
+  const page = typeof pageStr === "string" ? Number.parseInt(pageStr, 10) : 1
+
+  console.log(`Searching for "${query}" on page ${page}...`)
+
+  // Get data from MongoDB
   const { restaurants, pagination } = await searchRestaurants(query, page)
+
+  console.log(`Found ${restaurants.length} restaurants matching "${query}"`)
 
   // Generate pagination numbers
   const paginationNumbers = []
