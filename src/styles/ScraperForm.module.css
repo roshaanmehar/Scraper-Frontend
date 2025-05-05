@@ -3,6 +3,8 @@
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    border: 1px solid #eee;
+    margin-bottom: 20px;
   }
   
   .formHeader {
@@ -140,7 +142,7 @@
     }
   }
   
-  /* Dark theme support */
+  /* Dark theme support - using class selectors instead of :global */
   .dark .formCard {
     background: #1e1e1e;
     border: 1px solid #333;
