@@ -2,17 +2,21 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Search, MapPin, X, Check } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/HomePage.module.css"
+import { debounce } from "@/lib/utils"
 
 interface City {
   _id: string
   area_covered: string
   postcode_area: string
 }
+
+// Client-side cache for faster repeat searches
+const clientCityCache: Record<string, City[]> = {}
 
 export default function HomePage() {
   const router = useRouter()
@@ -41,19 +45,39 @@ export default function HomePage() {
     }
   }, [])
 
-  // Fetch cities when search input changes
-  useEffect(() => {
-    const fetchCities = async () => {
-      if (citySearch.trim().length < 1) {
+  // Create a memoized debounced fetch function
+  const debouncedFetchCities = useCallback(
+    debounce(async (searchTerm: string) => {
+      if (searchTerm.trim().length < 1) {
         setCities([])
         setShowDropdown(false)
+        setIsSearchingCities(false)
         return
       }
 
-      setIsSearchingCities(true)
+      // Check client-side cache first
+      const cacheKey = searchTerm.toLowerCase()
+      if (clientCityCache[cacheKey]) {
+        console.log(`Using client-side cache for "${searchTerm}"`)
+        setCities(clientCityCache[cacheKey])
+        setShowDropdown(clientCityCache[cacheKey].length > 0)
+        setIsSearchingCities(false)
+
+        // If we have an exact match, select it automatically
+        const exactMatch = clientCityCache[cacheKey].find(
+          (city) => city.area_covered.toLowerCase() === searchTerm.toLowerCase(),
+        )
+
+        if (exactMatch && clientCityCache[cacheKey].length === 1) {
+          selectCity(exactMatch)
+        }
+
+        return
+      }
+
       try {
-        console.log(`Fetching cities for search term: "${citySearch}"`)
-        const response = await fetch(`/api/cities?search=${encodeURIComponent(citySearch)}`)
+        console.log(`Fetching cities for search term: "${searchTerm}"`)
+        const response = await fetch(`/api/cities?search=${encodeURIComponent(searchTerm)}`)
 
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`)
@@ -66,8 +90,11 @@ export default function HomePage() {
           setCities(data)
           setShowDropdown(data.length > 0)
 
+          // Store in client-side cache
+          clientCityCache[cacheKey] = data
+
           // If we have an exact match, select it automatically
-          const exactMatch = data.find((city) => city.area_covered.toLowerCase() === citySearch.toLowerCase())
+          const exactMatch = data.find((city) => city.area_covered.toLowerCase() === searchTerm.toLowerCase())
 
           if (exactMatch && data.length === 1) {
             selectCity(exactMatch)
@@ -82,12 +109,21 @@ export default function HomePage() {
       } finally {
         setIsSearchingCities(false)
       }
+    }, 150),
+    [],
+  )
+
+  // Fetch cities when search input changes
+  useEffect(() => {
+    if (citySearch.trim().length < 1) {
+      setCities([])
+      setShowDropdown(false)
+      return
     }
 
-    // Reduced debounce time for faster feedback
-    const debounceTimer = setTimeout(fetchCities, 150)
-    return () => clearTimeout(debounceTimer)
-  }, [citySearch])
+    setIsSearchingCities(true)
+    debouncedFetchCities(citySearch)
+  }, [citySearch, debouncedFetchCities])
 
   const selectCity = (city: City) => {
     setSelectedCity(city)
