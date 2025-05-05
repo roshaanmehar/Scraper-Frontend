@@ -1,5 +1,3 @@
-"use client"
-
 import AppLayout from "../components/layout/AppLayout"
 import HomePage from "../components/HomePage"
 
