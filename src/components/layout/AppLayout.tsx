@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import Navbar from "@/components/layout/Navbar"
 import styles from "@/styles/layout/AppLayout.module.css"
