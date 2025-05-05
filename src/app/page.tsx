@@ -1,5 +1,12 @@
-import HomePage from "@/components/HomePage"
+"use client"
+
+import AppLayout from "../components/layout/AppLayout"
+import HomePage from "../components/HomePage"
 
 export default function Home() {
-  return <HomePage />
+  return (
+    <AppLayout activeTab="home">
+      <HomePage />
+    </AppLayout>
+  )
 }
