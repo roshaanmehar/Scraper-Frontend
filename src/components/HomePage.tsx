@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, X } from "lucide-react"
+import { Search, MapPin, X, Check } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout"
 import styles from "@/styles/HomePage.module.css"
 
@@ -24,7 +24,6 @@ export default function HomePage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [apiError, setApiError] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const cityInputRef = useRef<HTMLInputElement>(null)
 
@@ -48,13 +47,10 @@ export default function HomePage() {
       if (citySearch.trim().length < 1) {
         setCities([])
         setShowDropdown(false)
-        setApiError(null)
         return
       }
 
       setIsSearchingCities(true)
-      setApiError(null)
-
       try {
         console.log(`Fetching cities for search term: "${citySearch}"`)
         const response = await fetch(`/api/cities?search=${encodeURIComponent(citySearch)}`)
@@ -79,18 +75,17 @@ export default function HomePage() {
         } else {
           console.error("Invalid data format received from API:", data)
           setCities([])
-          setApiError("Invalid data received from server")
         }
       } catch (error) {
         console.error("Failed to fetch cities:", error)
         setCities([])
-        setApiError("Failed to fetch cities. Please try again.")
       } finally {
         setIsSearchingCities(false)
       }
     }
 
-    const debounceTimer = setTimeout(fetchCities, 300)
+    // Reduced debounce time for faster feedback
+    const debounceTimer = setTimeout(fetchCities, 150)
     return () => clearTimeout(debounceTimer)
   }, [citySearch])
 
@@ -147,9 +142,6 @@ export default function HomePage() {
     }, 1000)
   }
 
-  // If we have a city name but no dropdown results, allow manual entry
-  const canUseManualEntry = citySearch.trim().length > 0 && cities.length === 0 && !isSearchingCities
-
   return (
     <AppLayout activeTab="home">
       <div className={styles.homeContainer}>
@@ -160,12 +152,6 @@ export default function HomePage() {
             <div className={styles.errorMessage}>
               <Search size={16} />
               <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {apiError && (
-            <div className={styles.apiError}>
-              <span>{apiError}</span>
             </div>
           )}
 
@@ -187,6 +173,11 @@ export default function HomePage() {
                   />
                   {isSearchingCities && <div className={styles.searchSpinner}></div>}
                   {selectedCity && (
+                    <div className={styles.selectedIndicator}>
+                      <Check size={16} className={styles.checkIcon} />
+                    </div>
+                  )}
+                  {selectedCity && (
                     <button
                       type="button"
                       className={styles.clearButton}
@@ -202,7 +193,7 @@ export default function HomePage() {
                       {cities.map((city) => (
                         <div key={city._id} className={styles.citySuggestion} onClick={() => selectCity(city)}>
                           <MapPin size={16} className={styles.suggestionIcon} />
-                          <span className={styles.cityName}>{city.area_covered}</span>
+                          <span className={styles.cityName}>{highlightMatch(city.area_covered, citySearch)}</span>
                           <span className={styles.postcodeArea}>{city.postcode_area}</span>
                         </div>
                       ))}
@@ -212,22 +203,20 @@ export default function HomePage() {
                   {showDropdown && cities.length === 0 && !isSearchingCities && (
                     <div className={styles.noResults}>
                       No cities found matching "{citySearch}"
-                      {canUseManualEntry && (
-                        <button
-                          type="button"
-                          className={styles.manualEntryButton}
-                          onClick={() => {
-                            setSelectedCity({
-                              _id: "manual",
-                              area_covered: citySearch,
-                              postcode_area: "UNKNOWN",
-                            })
-                            setShowDropdown(false)
-                          }}
-                        >
-                          Use "{citySearch}" anyway
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className={styles.manualEntryButton}
+                        onClick={() => {
+                          setSelectedCity({
+                            _id: "manual",
+                            area_covered: citySearch,
+                            postcode_area: "UNKNOWN",
+                          })
+                          setShowDropdown(false)
+                        }}
+                      >
+                        Use "{citySearch}" anyway
+                      </button>
                     </div>
                   )}
                 </div>
@@ -250,7 +239,7 @@ export default function HomePage() {
               <button
                 type="submit"
                 className={`${styles.startButton} ${isLoading ? styles.loadingButton : ""}`}
-                disabled={isLoading || (!selectedCity && !canUseManualEntry) || !keyword}
+                disabled={isLoading || !selectedCity || !keyword}
               >
                 {isLoading ? (
                   <>
@@ -268,4 +257,19 @@ export default function HomePage() {
       </div>
     </AppLayout>
   )
+}
+
+// Helper function to highlight matching text
+function highlightMatch(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text
+
+  try {
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")
+    const parts = text.split(regex)
+
+    return parts.map((part, index) => (regex.test(part) ? <strong key={index}>{part}</strong> : part))
+  } catch (e) {
+    // Fallback in case of regex error
+    return text
+  }
 }
