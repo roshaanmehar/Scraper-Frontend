@@ -411,6 +411,18 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 500px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sectionTitle {
@@ -431,6 +443,18 @@
   border-radius: 4px;
   margin-bottom: 15px;
   color: #f44336;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .formFields {
@@ -450,6 +474,9 @@
   font-size: 0.9rem;
   font-weight: 500;
   color: #555;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .citySearchContainer {
@@ -473,6 +500,11 @@
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
 }
 
+.selectedInput {
+  background-color: #f0f7ff;
+  border-color: #3b82f6;
+}
+
 .searchSpinner {
   position: absolute;
   right: 15px;
@@ -484,6 +516,30 @@
   border-top-color: #555;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+.clearButton {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.clearButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #333;
 }
 
 @keyframes spin {
@@ -505,6 +561,18 @@
   overflow-y: auto;
   z-index: 10;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .citySuggestion {
@@ -512,12 +580,43 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  transition: background-color 0.2s;
+  gap: 10px;
+  transition: background-color 0.15s;
 }
 
-.citySuggestion:hover {
-  background-color: #f0f0f0;
+.citySuggestion:hover,
+.focused {
+  background-color: #f0f7ff;
+}
+
+.suggestionIcon {
+  color: #666;
+  flex-shrink: 0;
+}
+
+.cityName {
+  flex-grow: 1;
+}
+
+.cityName strong {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.postcodeArea {
+  font-size: 0.85rem;
+  color: #666;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.noResults {
+  padding: 12px 15px;
+  color: #666;
+  text-align: center;
+  font-style: italic;
 }
 
 .startButtonContainer {
@@ -532,27 +631,32 @@
   gap: 10px;
   padding: 12px 25px;
   border-radius: 6px;
-  background: #333;
+  background: #3b82f6;
   border: none;
   color: #fff;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   min-width: 180px;
 }
 
-.startButton:hover {
-  background: #444;
+.startButton:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.startButton:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .startButton:disabled {
-  opacity: 0.7;
+  background: #94a3b8;
   cursor: not-allowed;
 }
 
 .loadingButton {
-  background: #555;
+  background: #64748b !important;
 }
 
 .loadingSpinner {
@@ -567,41 +671,65 @@
 
 /* Dark theme overrides */
 .dark-theme .mainConfigSection {
-  background: #222;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  background: #1e293b;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .dark-theme .sectionTitle {
-  color: #f0f0f0;
+  color: #f1f5f9;
 }
 
 .dark-theme .inputGroup label {
-  color: #b0b0b0;
+  color: #cbd5e1;
 }
 
 .dark-theme .input {
-  background: #333;
-  border-color: #444;
-  color: #f0f0f0;
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
 }
 
-:global(.dark-theme).citySuggestions {
-  background: #333;
-  border-color: #444;
+.dark-theme .input:focus {
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
-:global(.dark-theme).citySuggestion:hover {
-  background: #444;
+.dark-theme .selectedInput {
+  background-color: #1e3a8a;
+  border-color: #3b82f6;
 }
 
-:global(.dark-theme).postcodeArea {
-  background: #444;
-  color: #b0b0b0;
+.dark-theme .citySuggestions {
+  background: #1e293b;
+  border-color: #475569;
 }
 
-:global(.dark-theme).errorMessage {
-  background: rgba(244, 67, 54, 0.1);
-  color: #ff6b6b;
+.dark-theme .citySuggestion:hover,
+.dark-theme .focused {
+  background-color: #334155;
+}
+
+.dark-theme .postcodeArea {
+  background: #475569;
+  color: #cbd5e1;
+}
+
+.dark-theme .noResults {
+  color: #94a3b8;
+}
+
+.dark-theme .clearButton {
+  color: #94a3b8;
+}
+
+.dark-theme .clearButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+.dark-theme .errorMessage {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
 }
 
 /* Responsive adjustments */
