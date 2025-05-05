@@ -71,15 +71,38 @@ async function searchCities(query: string): Promise<City[]> {
 
   try {
     const client = await clientPromise
-    const db = client.db("Local") // Database name from the screenshot
+    console.log("Connected to MongoDB")
 
-    // Create search filter for city names
+    // Log available databases for debugging
+    const adminDb = client.db("admin")
+    const dbs = await adminDb.admin().listDatabases()
+    console.log(
+      "Available databases:",
+      dbs.databases.map((db) => db.name),
+    )
+
+    // Try to connect to the Leeds database
+    const db = client.db("Leeds")
+
+    // Log available collections for debugging
+    const collections = await db.listCollections().toArray()
+    console.log(
+      "Available collections in Leeds database:",
+      collections.map((c) => c.name),
+    )
+
+    // Create search filter for city names - search in the cities collection
     const filter = {
       area_covered: { $regex: normalizedQuery, $options: "i" },
     }
 
+    console.log(`Searching for cities matching "${normalizedQuery}"`)
+
     // Get matching cities, limit to 10 for performance
-    const cities = await db.collection("Cities.cities").find(filter).limit(10).toArray()
+    // Use the correct collection name based on your MongoDB structure
+    const cities = await db.collection("cities").find(filter).limit(10).toArray()
+
+    console.log(`Found ${cities.length} cities matching "${normalizedQuery}"`)
 
     // Convert MongoDB documents to plain objects
     const serializedCities = cities.map((city) => ({
@@ -121,7 +144,9 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get("query") || ""
 
   try {
+    console.log(`API route received search request for "${query}"`)
     const cities = await searchCities(query)
+    console.log(`API route returning ${cities.length} cities`)
     return NextResponse.json({ cities })
   } catch (error) {
     console.error("Error in cities API:", error)
