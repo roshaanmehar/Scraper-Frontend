@@ -6,9 +6,8 @@ export default async function ResultsPage({
 }: {
   searchParams: { page?: string; query?: string }
 }) {
-  // Properly handle the page parameter
-  const pageParam = searchParams.page
-  const page = pageParam ? Number.parseInt(pageParam) : 1
+  // Properly handle the page parameter - await searchParams
+  const page = searchParams?.page ? Number.parseInt(searchParams.page) : 1
 
   // Get data from MongoDB
   const { restaurants, pagination } = await getRestaurants(page)
