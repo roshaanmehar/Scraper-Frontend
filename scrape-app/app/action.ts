@@ -1,6 +1,6 @@
 "use server"
 
-import clientPromise from "@/lib/mongodb"
+import clientPromise from "../lib/mongodb"
 
 export type Restaurant = {
   _id: string
