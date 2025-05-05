@@ -1,12 +1,12 @@
-// This is a script you can run to optimize your cities collection
-// You can run it with: npx ts-node scripts/optimize-cities-collection.ts
+// This script optimizes the cities collection for faster searching
+// Run with: npx ts-node scripts/optimize-cities-collection.ts
 
 import { MongoClient } from "mongodb"
 
 async function optimizeCitiesCollection() {
   // Replace with your MongoDB connection string
   const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-  const MONGODB_DB = "Leeds"
+  const MONGODB_DB = "cities" // Changed to match the user's database name
 
   console.log("Connecting to MongoDB...")
   const client = await MongoClient.connect(MONGODB_URI)
@@ -23,9 +23,18 @@ async function optimizeCitiesCollection() {
 
     // Create indexes for faster searches
     console.log("Creating indexes on cities collection...")
+
+    // Index for exact matches
     await db.collection("cities").createIndex({ area_covered: 1 })
+
+    // Text index for full-text search capabilities
     await db.collection("cities").createIndex({ area_covered: "text" })
+
+    // Index for postcode area searches
     await db.collection("cities").createIndex({ postcode_area: 1 })
+
+    // Compound index for area_covered and postcode_area
+    await db.collection("cities").createIndex({ area_covered: 1, postcode_area: 1 })
 
     // Check if we need to convert any fields
     const sampleCity = await db.collection("cities").findOne({})
@@ -60,6 +69,17 @@ async function optimizeCitiesCollection() {
     // Count cities
     const cityCount = await db.collection("cities").countDocuments()
     console.log(`Cities collection has ${cityCount} documents`)
+
+    // Create a lowercase version of area_covered for case-insensitive searches
+    console.log("Creating lowercase version of area_covered for faster case-insensitive searches...")
+    await db
+      .collection("cities")
+      .updateMany({ area_covered_lower: { $exists: false } }, [
+        { $set: { area_covered_lower: { $toLower: "$area_covered" } } },
+      ])
+
+    // Create index on lowercase field
+    await db.collection("cities").createIndex({ area_covered_lower: 1 })
 
     console.log("Optimization complete!")
   } catch (error) {
