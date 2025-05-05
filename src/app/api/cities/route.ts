@@ -1,91 +1,29 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase, cityCache, popularCitiesCache } from "@/lib/mongodb"
+import { NextResponse } from "next/server"
 
-// Cache expiry time
-const CACHE_EXPIRY = 1000 * 60 * 30 // 30 minutes
+// This is a simple mock API for demonstration purposes
+export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const search = url.searchParams.get("search") || ""
 
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams
-    const search = searchParams.get("search") || ""
-    const lowercaseSearch = search.toLowerCase()
+  // Mock data for city search
+  const cities = [
+    { _id: "1", area_covered: "London", postcode_area: "SW1" },
+    { _id: "2", area_covered: "Manchester", postcode_area: "M1" },
+    { _id: "3", area_covered: "Birmingham", postcode_area: "B1" },
+    { _id: "4", area_covered: "Liverpool", postcode_area: "L1" },
+    { _id: "5", area_covered: "Leeds", postcode_area: "LS1" },
+    { _id: "6", area_covered: "Bristol", postcode_area: "BS1" },
+    { _id: "7", area_covered: "Newcastle", postcode_area: "NE1" },
+    { _id: "8", area_covered: "Edinburgh", postcode_area: "EH1" },
+    { _id: "9", area_covered: "Glasgow", postcode_area: "G1" },
+    { _id: "10", area_covered: "Cardiff", postcode_area: "CF1" },
+  ]
 
-    if (!search || search.trim().length < 1) {
-      return NextResponse.json([])
-    }
-
-    console.log(`Searching for cities with term: "${search}"`)
-    const startTime = performance.now()
-
-    // Check if it's a popular city (exact or partial match)
-    if (popularCitiesCache[lowercaseSearch]) {
-      console.log(`Using prefetched popular city cache for "${search}"`)
-      return NextResponse.json(popularCitiesCache[lowercaseSearch])
-    }
-
-    // Check regular cache
-    const cacheKey = lowercaseSearch
-    if (cityCache.has(cacheKey)) {
-      const cachedResult = cityCache.get(cacheKey)
-      console.log(`Using cached result for "${search}" with ${cachedResult?.length || 0} cities`)
-      return NextResponse.json(cachedResult)
-    }
-
-    try {
-      const { db } = await connectToDatabase()
-
-      // Log the database and collection we're using
-      console.log(`Using database path: ${db.databaseName}, searching in 'cities' collection`)
-
-      // Get a count of documents in the collection
-      const count = await db.collection("cities").countDocuments()
-      console.log(`Total documents in cities collection: ${count}`)
-
-      // Simple query focusing on area_covered which we know exists in your documents
-      const query = {
-        area_covered: { $regex: `^${search}`, $options: "i" },
-      }
-
-      console.log("Search query:", JSON.stringify(query))
-
-      let cities = await db.collection("cities").find(query).sort({ area_covered: 1 }).limit(10).toArray()
-
-      // If no results with prefix search, try a contains search
-      if (cities.length === 0) {
-        const containsQuery = {
-          area_covered: { $regex: search, $options: "i" },
-        }
-
-        console.log("Fallback contains query:", JSON.stringify(containsQuery))
-        cities = await db.collection("cities").find(containsQuery).sort({ area_covered: 1 }).limit(10).toArray()
-      }
-
-      const endTime = performance.now()
-      console.log(`Found ${cities.length} cities matching "${search}" in ${(endTime - startTime).toFixed(2)}ms`)
-
-      if (cities.length > 0) {
-        console.log("Sample result:", JSON.stringify(cities[0]))
-      }
-
-      // Cache the results for future requests
-      cityCache.set(cacheKey, cities)
-
-      // Set cache expiry
-      setTimeout(() => {
-        cityCache.delete(cacheKey)
-      }, CACHE_EXPIRY)
-
-      return NextResponse.json(cities)
-    } catch (dbError) {
-      console.error("Database error when searching cities:", dbError)
-
-      // Return empty results instead of throwing an error
-      return NextResponse.json([])
-    }
-  } catch (error) {
-    console.error("Error in cities API route:", error)
-
-    // Return empty results with 200 status to prevent client-side errors
-    return NextResponse.json([], { status: 200 })
+  if (!search) {
+    return NextResponse.json([])
   }
+
+  const filteredCities = cities.filter((city) => city.area_covered.toLowerCase().includes(search.toLowerCase()))
+
+  return NextResponse.json(filteredCities)
 }
