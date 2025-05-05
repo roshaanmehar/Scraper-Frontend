@@ -31,44 +31,53 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cachedResult)
     }
 
-    const { db } = await connectToDatabase()
+    try {
+      const { db } = await connectToDatabase()
 
-    // First try a prefix search for faster results (starts with)
-    const prefixQuery = {
-      area_covered: {
-        $regex: `^${search}`,
-        $options: "i", // Case-insensitive
-      },
-    }
-
-    let cities = await db.collection("cities").find(prefixQuery).sort({ area_covered: 1 }).limit(10).toArray()
-
-    // If no results with prefix search, try a contains search
-    if (cities.length === 0) {
-      const containsQuery = {
+      // First try a prefix search for faster results (starts with)
+      const prefixQuery = {
         area_covered: {
-          $regex: search,
+          $regex: `^${search}`,
           $options: "i", // Case-insensitive
         },
       }
 
-      cities = await db.collection("cities").find(containsQuery).sort({ area_covered: 1 }).limit(10).toArray()
+      let cities = await db.collection("cities").find(prefixQuery).sort({ area_covered: 1 }).limit(10).toArray()
+
+      // If no results with prefix search, try a contains search
+      if (cities.length === 0) {
+        const containsQuery = {
+          area_covered: {
+            $regex: search,
+            $options: "i", // Case-insensitive
+          },
+        }
+
+        cities = await db.collection("cities").find(containsQuery).sort({ area_covered: 1 }).limit(10).toArray()
+      }
+
+      const endTime = performance.now()
+      console.log(`Found ${cities.length} cities matching "${search}" in ${(endTime - startTime).toFixed(2)}ms`)
+
+      // Cache the results for future requests
+      cityCache.set(cacheKey, cities)
+
+      // Set cache expiry
+      setTimeout(() => {
+        cityCache.delete(cacheKey)
+      }, CACHE_EXPIRY)
+
+      return NextResponse.json(cities)
+    } catch (dbError) {
+      console.error("Database error when searching cities:", dbError)
+
+      // Return empty results instead of throwing an error
+      return NextResponse.json([])
     }
-
-    const endTime = performance.now()
-    console.log(`Found ${cities.length} cities matching "${search}" in ${(endTime - startTime).toFixed(2)}ms`)
-
-    // Cache the results for future requests
-    cityCache.set(cacheKey, cities)
-
-    // Set cache expiry
-    setTimeout(() => {
-      cityCache.delete(cacheKey)
-    }, CACHE_EXPIRY)
-
-    return NextResponse.json(cities)
   } catch (error) {
-    console.error("Error fetching cities:", error)
-    return NextResponse.json([], { status: 500 })
+    console.error("Error in cities API route:", error)
+
+    // Return empty results with 200 status to prevent client-side errors
+    return NextResponse.json([], { status: 200 })
   }
 }
