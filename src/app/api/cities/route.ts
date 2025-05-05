@@ -7,38 +7,26 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
 
     if (!search || search.length < 2) {
-      return NextResponse.json({
-        status: "success",
-        cities: [],
-      })
+      return NextResponse.json([])
     }
 
     const { db } = await connectToDatabase()
 
-    // Create a query to search for cities
-    const query = {
-      area_covered: { $regex: search, $options: "i" },
-    }
+    // Create a case-insensitive regex for the search term
+    const searchRegex = new RegExp(search, "i")
 
-    console.log(`Searching cities with query:`, query)
+    // Query the cities collection
+    const cities = await db
+      .collection("cities")
+      .find({
+        area_covered: { $regex: searchRegex },
+      })
+      .limit(10)
+      .toArray()
 
-    // Get the cities collection
-    const cities = await db.collection("cities").find(query).limit(10).toArray()
-
-    console.log(`Found ${cities.length} cities matching "${search}"`)
-
-    return NextResponse.json({
-      status: "success",
-      cities,
-    })
+    return NextResponse.json(cities)
   } catch (error) {
     console.error("Error fetching cities:", error)
-    return NextResponse.json(
-      {
-        status: "error",
-        error: "Failed to fetch cities",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Failed to fetch cities" }, { status: 500 })
   }
 }
