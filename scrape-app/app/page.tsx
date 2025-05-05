@@ -4,7 +4,19 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import type { City } from "./types"
+
+// Define City type directly in this file to avoid import issues
+type City = {
+  _id: string
+  postcode_area: string
+  area_covered: string
+  population_2011: number
+  households_2011: number
+  postcodes: number
+  active_postcodes: number
+  non_geographic_postcodes: number
+  scraped_at: string
+}
 
 export default function ScrapePage() {
   const [city, setCity] = useState("")
