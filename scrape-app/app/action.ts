@@ -20,7 +20,7 @@ export type Restaurant = {
 export async function getRestaurants(page = 1, limit = 6) {
   try {
     const client = await clientPromise
-    const db = client.db("Leeds")
+    const db = client.db("Leeds") // Database name specified here, not in env
 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit
@@ -71,7 +71,7 @@ export async function getRestaurants(page = 1, limit = 6) {
 export async function searchRestaurants(query: string, page = 1, limit = 6) {
   try {
     const client = await clientPromise
-    const db = client.db("Leeds")
+    const db = client.db("Leeds") // Database name specified here, not in env
 
     // Create search filter
     const filter = {
