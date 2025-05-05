@@ -25,8 +25,6 @@ export default function ScrapePage() {
   const [cityResults, setCityResults] = useState<City[]>([])
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -48,11 +46,8 @@ export default function ScrapePage() {
 
     setIsSearching(true)
     setShowDropdown(true)
-    setError(null)
-    setDebugInfo(null)
 
     try {
-      console.log(`Searching for city: ${value}`)
       // Use the API endpoint
       const response = await fetch(`/api/cities?query=${encodeURIComponent(value)}`)
 
@@ -61,15 +56,9 @@ export default function ScrapePage() {
       }
 
       const data = await response.json()
-      console.log(`Received ${data.cities?.length || 0} cities from API`)
-
       setCityResults(data.cities || [])
-
-      // Set debug info
-      setDebugInfo(`Search for "${value}" returned ${data.cities?.length || 0} results`)
     } catch (error) {
       console.error("Error searching cities:", error)
-      setError("Failed to search cities. Please try again.")
       setCityResults([])
     } finally {
       setIsSearching(false)
@@ -147,10 +136,7 @@ export default function ScrapePage() {
                 {cityResults.map((city) => (
                   <div key={city._id} className="city-option" onClick={() => handleCitySelect(city)}>
                     <div className="city-name">{city.area_covered}</div>
-                    <div className="city-details">
-                      <span className="postcode-area">{city.postcode_area}</span>
-                      <span className="population">Pop: {city.population_2011.toLocaleString()}</span>
-                    </div>
+                    <div className="postcode-area">{city.postcode_area}</div>
                   </div>
                 ))}
               </div>
@@ -161,9 +147,6 @@ export default function ScrapePage() {
                 <div className="no-results">No cities found</div>
               </div>
             )}
-
-            {error && <div className="error-message">{error}</div>}
-            {debugInfo && <div className="debug-info">{debugInfo}</div>}
           </div>
 
           {selectedCity && (
@@ -171,18 +154,6 @@ export default function ScrapePage() {
               <div className="info-item">
                 <span className="info-label">Postcode Area:</span>
                 <span className="info-value">{selectedCity.postcode_area}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Population:</span>
-                <span className="info-value">{selectedCity.population_2011.toLocaleString()}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Households:</span>
-                <span className="info-value">{selectedCity.households_2011.toLocaleString()}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Active Postcodes:</span>
-                <span className="info-value">{selectedCity.active_postcodes.toLocaleString()}</span>
               </div>
             </div>
           )}
@@ -214,15 +185,6 @@ export default function ScrapePage() {
             Start
           </button>
         </Link>
-
-        {/* Debug button to manually trigger search */}
-        <button
-          className="btn btn-outline debug-button"
-          onClick={() => handleCitySearch(city)}
-          style={{ marginTop: "10px" }}
-        >
-          Debug: Search Again
-        </button>
       </div>
     </div>
   )

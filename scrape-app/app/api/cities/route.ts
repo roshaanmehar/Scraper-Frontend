@@ -63,28 +63,17 @@ async function searchCities(query: string): Promise<City[]> {
   const now = Date.now()
 
   if (cachedResult && now - cachedResult.timestamp < CACHE_TTL) {
-    console.log(`Cache hit for "${normalizedQuery}"`)
     return cachedResult.cities
   }
 
-  console.log(`Cache miss for "${normalizedQuery}", fetching from MongoDB...`)
-
   try {
     const client = await clientPromise
-    console.log("Connected to MongoDB")
 
     // Try multiple database and collection combinations to find the right one
     const possibleDbs = ["Local", "Leeds", "Cities", "local"]
     const possibleCollections = ["cities", "Cities", "Cities.cities", "city"]
 
     let cities = []
-    let dbUsed = ""
-    let collectionUsed = ""
-
-    // Log all databases for debugging
-    const adminDb = client.db("admin")
-    const dbList = await adminDb.admin().listDatabases()
-    console.log("Available databases:", dbList.databases.map((db) => db.name).join(", "))
 
     // Try each database and collection combination
     for (const dbName of possibleDbs) {
@@ -93,18 +82,12 @@ async function searchCities(query: string): Promise<City[]> {
 
         // List collections in this database
         const collections = await db.listCollections().toArray()
-        console.log(`Collections in ${dbName}:`, collections.map((c) => c.name).join(", "))
 
         for (const collName of possibleCollections) {
           try {
             // Check if collection exists
             const collExists = collections.some((c) => c.name === collName)
-            if (!collExists) {
-              console.log(`Collection ${collName} not found in ${dbName}`)
-              continue
-            }
-
-            console.log(`Trying to search in ${dbName}.${collName}...`)
+            if (!collExists) continue
 
             // Create search filter for city names
             const filter = {
@@ -119,27 +102,22 @@ async function searchCities(query: string): Promise<City[]> {
             const result = await db.collection(collName).find(filter).limit(10).toArray()
 
             if (result.length > 0) {
-              console.log(`Found ${result.length} cities in ${dbName}.${collName}`)
               cities = result
-              dbUsed = dbName
-              collectionUsed = collName
               break
             }
           } catch (err) {
-            console.log(`Error searching in ${dbName}.${collName}:`, err)
+            // Continue to next collection
           }
         }
 
         if (cities.length > 0) break
       } catch (err) {
-        console.log(`Error accessing database ${dbName}:`, err)
+        // Continue to next database
       }
     }
 
     if (cities.length === 0) {
       // If no cities found, create a mock entry for testing
-      console.log("No cities found in any database. Creating mock data for testing.")
-
       if (normalizedQuery === "leeds") {
         cities = [
           {
@@ -155,8 +133,6 @@ async function searchCities(query: string): Promise<City[]> {
           },
         ]
       }
-    } else {
-      console.log(`Successfully found cities in ${dbUsed}.${collectionUsed}`)
     }
 
     // Convert MongoDB documents to plain objects
@@ -173,8 +149,6 @@ async function searchCities(query: string): Promise<City[]> {
 
     return serializedCities as City[]
   } catch (error) {
-    console.error("Error searching cities in MongoDB:", error)
-
     // Return mock data for testing if there's an error
     if (normalizedQuery === "leeds") {
       return [
@@ -211,12 +185,9 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get("query") || ""
 
   try {
-    console.log(`API route received search request for "${query}"`)
     const cities = await searchCities(query)
-    console.log(`API route returning ${cities.length} cities`)
     return NextResponse.json({ cities })
   } catch (error) {
-    console.error("Error in cities API:", error)
     return NextResponse.json({ error: "Failed to search cities" }, { status: 500 })
   }
 }
