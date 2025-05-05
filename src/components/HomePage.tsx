@@ -24,10 +24,9 @@ export default function HomePage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [focusedIndex, setFocusedIndex] = useState(-1)
+  const [apiError, setApiError] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const cityInputRef = useRef<HTMLInputElement>(null)
-  const suggestionRefs = useRef<(HTMLDivElement | null)[]>([])
 
   // Handle clicks outside the dropdown
   useEffect(() => {
@@ -49,25 +48,43 @@ export default function HomePage() {
       if (citySearch.trim().length < 1) {
         setCities([])
         setShowDropdown(false)
+        setApiError(null)
         return
       }
 
       setIsSearchingCities(true)
+      setApiError(null)
+
       try {
+        console.log(`Fetching cities for search term: "${citySearch}"`)
         const response = await fetch(`/api/cities?search=${encodeURIComponent(citySearch)}`)
+
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`)
         }
 
         const data = await response.json()
-        console.log("Cities data:", data)
+        console.log(`Received ${Array.isArray(data) ? data.length : 0} cities from API`)
 
-        setCities(Array.isArray(data) ? data : [])
-        setShowDropdown(true)
-        setFocusedIndex(-1) // Reset focused index when new results arrive
+        if (Array.isArray(data)) {
+          setCities(data)
+          setShowDropdown(data.length > 0)
+
+          // If we have an exact match, select it automatically
+          const exactMatch = data.find((city) => city.area_covered.toLowerCase() === citySearch.toLowerCase())
+
+          if (exactMatch && data.length === 1) {
+            selectCity(exactMatch)
+          }
+        } else {
+          console.error("Invalid data format received from API:", data)
+          setCities([])
+          setApiError("Invalid data received from server")
+        }
       } catch (error) {
         console.error("Failed to fetch cities:", error)
         setCities([])
+        setApiError("Failed to fetch cities. Please try again.")
       } finally {
         setIsSearchingCities(false)
       }
@@ -77,21 +94,10 @@ export default function HomePage() {
     return () => clearTimeout(debounceTimer)
   }, [citySearch])
 
-  // Scroll to focused item
-  useEffect(() => {
-    if (focusedIndex >= 0 && focusedIndex < suggestionRefs.current.length) {
-      suggestionRefs.current[focusedIndex]?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      })
-    }
-  }, [focusedIndex])
-
   const selectCity = (city: City) => {
     setSelectedCity(city)
     setCitySearch(city.area_covered)
     setShowDropdown(false)
-    setFocusedIndex(-1)
 
     // Move focus to keyword input after selection
     document.getElementById("keyword")?.focus()
@@ -112,24 +118,6 @@ export default function HomePage() {
     // If changing city input and there's a selected city, clear it
     if (e.target.id === "city" && selectedCity) {
       setSelectedCity(null)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showDropdown) return
-
-    // Handle arrow keys for navigation
-    if (e.key === "ArrowDown") {
-      e.preventDefault()
-      setFocusedIndex((prev) => (prev < cities.length - 1 ? prev + 1 : prev))
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault()
-      setFocusedIndex((prev) => (prev > 0 ? prev - 1 : 0))
-    } else if (e.key === "Enter" && focusedIndex >= 0) {
-      e.preventDefault()
-      selectCity(cities[focusedIndex])
-    } else if (e.key === "Escape") {
-      setShowDropdown(false)
     }
   }
 
@@ -159,6 +147,9 @@ export default function HomePage() {
     }, 1000)
   }
 
+  // If we have a city name but no dropdown results, allow manual entry
+  const canUseManualEntry = citySearch.trim().length > 0 && cities.length === 0 && !isSearchingCities
+
   return (
     <AppLayout activeTab="home">
       <div className={styles.homeContainer}>
@@ -169,6 +160,12 @@ export default function HomePage() {
             <div className={styles.errorMessage}>
               <Search size={16} />
               <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {apiError && (
+            <div className={styles.apiError}>
+              <span>{apiError}</span>
             </div>
           )}
 
@@ -183,15 +180,10 @@ export default function HomePage() {
                     type="text"
                     value={citySearch}
                     onChange={(e) => handleInputChange(e, setCitySearch)}
-                    onKeyDown={handleKeyDown}
                     onFocus={() => citySearch.trim().length > 0 && setShowDropdown(true)}
                     placeholder="Enter city name"
                     className={`${styles.input} ${selectedCity ? styles.selectedInput : ""}`}
                     autoComplete="off"
-                    aria-expanded={showDropdown}
-                    aria-autocomplete="list"
-                    aria-controls="city-suggestions"
-                    aria-activedescendant={focusedIndex >= 0 ? `city-suggestion-${focusedIndex}` : undefined}
                   />
                   {isSearchingCities && <div className={styles.searchSpinner}></div>}
                   {selectedCity && (
@@ -206,20 +198,11 @@ export default function HomePage() {
                   )}
 
                   {showDropdown && cities.length > 0 && (
-                    <div id="city-suggestions" className={styles.citySuggestions} role="listbox">
-                      {cities.map((city, index) => (
-                        <div
-                          ref={(el) => (suggestionRefs.current[index] = el)}
-                          key={city._id}
-                          id={`city-suggestion-${index}`}
-                          className={`${styles.citySuggestion} ${focusedIndex === index ? styles.focused : ""}`}
-                          onClick={() => selectCity(city)}
-                          onMouseEnter={() => setFocusedIndex(index)}
-                          role="option"
-                          aria-selected={focusedIndex === index}
-                        >
+                    <div className={styles.citySuggestions}>
+                      {cities.map((city) => (
+                        <div key={city._id} className={styles.citySuggestion} onClick={() => selectCity(city)}>
                           <MapPin size={16} className={styles.suggestionIcon} />
-                          <span className={styles.cityName}>{highlightMatch(city.area_covered, citySearch)}</span>
+                          <span className={styles.cityName}>{city.area_covered}</span>
                           <span className={styles.postcodeArea}>{city.postcode_area}</span>
                         </div>
                       ))}
@@ -227,7 +210,25 @@ export default function HomePage() {
                   )}
 
                   {showDropdown && cities.length === 0 && !isSearchingCities && (
-                    <div className={styles.noResults}>No cities found matching "{citySearch}"</div>
+                    <div className={styles.noResults}>
+                      No cities found matching "{citySearch}"
+                      {canUseManualEntry && (
+                        <button
+                          type="button"
+                          className={styles.manualEntryButton}
+                          onClick={() => {
+                            setSelectedCity({
+                              _id: "manual",
+                              area_covered: citySearch,
+                              postcode_area: "UNKNOWN",
+                            })
+                            setShowDropdown(false)
+                          }}
+                        >
+                          Use "{citySearch}" anyway
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -249,7 +250,7 @@ export default function HomePage() {
               <button
                 type="submit"
                 className={`${styles.startButton} ${isLoading ? styles.loadingButton : ""}`}
-                disabled={isLoading || !selectedCity || !keyword}
+                disabled={isLoading || (!selectedCity && !canUseManualEntry) || !keyword}
               >
                 {isLoading ? (
                   <>
@@ -267,19 +268,4 @@ export default function HomePage() {
       </div>
     </AppLayout>
   )
-}
-
-// Helper function to highlight matching text
-function highlightMatch(text: string, query: string): React.ReactNode {
-  if (!query.trim()) return text
-
-  try {
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi")
-    const parts = text.split(regex)
-
-    return parts.map((part, index) => (regex.test(part) ? <strong key={index}>{part}</strong> : part))
-  } catch (e) {
-    // Fallback in case of regex error
-    return text
-  }
 }
