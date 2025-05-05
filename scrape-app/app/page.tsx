@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { searchCities } from "./actions"
 import type { City } from "./types"
 
 export default function ScrapePage() {
@@ -44,10 +43,14 @@ export default function ScrapePage() {
     setShowDropdown(true)
 
     try {
-      const results = await searchCities(value)
-      setCityResults(results)
+      // Use the API endpoint instead of direct server action
+      const response = await fetch(`/api/cities?query=${encodeURIComponent(value)}`)
+      if (!response.ok) throw new Error("Failed to fetch cities")
+      const data = await response.json()
+      setCityResults(data.cities || [])
     } catch (error) {
       console.error("Error searching cities:", error)
+      setCityResults([])
     } finally {
       setIsSearching(false)
     }
