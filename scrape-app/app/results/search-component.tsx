@@ -231,10 +231,6 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
           .filter((email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "")
           .join("; ")
       } else if (restaurant.email) {
-        \
-        emails = restaurant.email  !== "\")
-          .join("; ")
-      } else if (restaurant.email) {
         emails = restaurant.email
       }
 
