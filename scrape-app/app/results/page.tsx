@@ -83,7 +83,7 @@ export default async function ResultsPage({
               <select id="sort" className="sort-select">
                 <option value="recent">Most Recent</option>
                 <option value="name">Business Name</option>
-                <option value="rating">Rating</option>
+                <option value="reviews">Number of Reviews</option>
               </select>
             </div>
 
@@ -92,7 +92,7 @@ export default async function ResultsPage({
         </div>
       </div>
 
-      <div className="results-summary">Found {pagination.total} restaurants</div>
+      <div className="results-summary">Found {pagination.total} restaurants with emails</div>
 
       <div className="results-grid">
         {restaurants.length > 0 ? (
@@ -103,18 +103,14 @@ export default async function ResultsPage({
                 <div className="detail-item">
                   <span className="detail-label">Email:</span>
                   <div className="email-list">
-                    {restaurant.email ? (
-                      Array.isArray(restaurant.email) ? (
-                        restaurant.email.map((email, index) => (
-                          <span key={index} className="detail-value">
-                            {email}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="detail-value">{restaurant.email}</span>
-                      )
+                    {Array.isArray(restaurant.email) ? (
+                      restaurant.email.map((email, index) => (
+                        <span key={index} className="detail-value">
+                          {email}
+                        </span>
+                      ))
                     ) : (
-                      <span className="detail-value no-data">No email available</span>
+                      <span className="detail-value">{restaurant.email}</span>
                     )}
                   </div>
                 </div>
@@ -123,10 +119,6 @@ export default async function ResultsPage({
                   <span className="detail-value">
                     {restaurant.phonenumber ? restaurant.phonenumber : "No phone available"}
                   </span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Address:</span>
-                  <span className="detail-value address">{restaurant.address || "No address available"}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Website:</span>
@@ -138,12 +130,10 @@ export default async function ResultsPage({
                     <span className="detail-value no-data">No website available</span>
                   )}
                 </div>
-                {restaurant.stars && (
+                {restaurant.numberofreviews && (
                   <div className="detail-item">
-                    <span className="detail-label">Rating:</span>
-                    <span className="detail-value">
-                      {restaurant.stars} ⭐ ({restaurant.numberofreviews || 0} reviews)
-                    </span>
+                    <span className="detail-label">Reviews:</span>
+                    <span className="detail-value">{restaurant.numberofreviews} reviews</span>
                   </div>
                 )}
               </div>
