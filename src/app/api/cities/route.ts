@@ -6,13 +6,22 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
 
-    if (!search || search.trim().length < 2) {
+    if (!search || search.trim().length < 1) {
       return NextResponse.json([])
     }
 
     console.log(`Searching for cities with term: "${search}"`)
+    const startTime = performance.now()
 
     const { db } = await connectToDatabase()
+
+    // Ensure we have a text index on area_covered for faster searches
+    try {
+      await db.collection("cities").createIndex({ area_covered: "text" })
+    } catch (error) {
+      // Index might already exist, continue
+      console.log("Index may already exist:", error)
+    }
 
     // Create a case-insensitive regex for the search term
     const query = {
@@ -30,7 +39,8 @@ export async function GET(request: NextRequest) {
       .limit(10) // Limit to 10 results for performance
       .toArray()
 
-    console.log(`Found ${cities.length} cities matching "${search}"`)
+    const endTime = performance.now()
+    console.log(`Found ${cities.length} cities matching "${search}" in ${(endTime - startTime).toFixed(2)}ms`)
 
     return NextResponse.json(cities)
   } catch (error) {
