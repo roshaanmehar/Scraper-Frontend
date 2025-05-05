@@ -79,11 +79,14 @@ export default function HomePage() {
         console.log(`Fetching cities for search term: "${searchTerm}"`)
         const response = await fetch(`/api/cities?search=${encodeURIComponent(searchTerm)}`)
 
+        // Always parse the response, even if status is not OK
+        const data = await response.json()
+
         if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`)
+          console.warn(`API returned status ${response.status}: ${response.statusText}`)
+          // Continue with empty data instead of throwing
         }
 
-        const data = await response.json()
         console.log(`Received ${Array.isArray(data) ? data.length : 0} cities from API`)
 
         if (Array.isArray(data)) {
@@ -106,6 +109,9 @@ export default function HomePage() {
       } catch (error) {
         console.error("Failed to fetch cities:", error)
         setCities([])
+
+        // Add fallback for manual entry when API fails
+        setShowDropdown(true)
       } finally {
         setIsSearchingCities(false)
       }
