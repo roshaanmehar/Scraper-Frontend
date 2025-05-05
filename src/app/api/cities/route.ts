@@ -1,63 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
+import { connectToDatabase, cityCache, popularCitiesCache } from "@/lib/mongodb"
 
-// Improve the caching mechanism
-const cityCache = new Map<string, any[]>()
-const CACHE_EXPIRY = 1000 * 60 * 30 // Increase to 30 minutes for better performance
-
-// Add a prefetch cache for popular cities
-const POPULAR_CITIES = [
-  "London",
-  "Manchester",
-  "Birmingham",
-  "Leeds",
-  "Liverpool",
-  "Newcastle",
-  "Edinburgh",
-  "Glasgow",
-  "Cardiff",
-  "Belfast",
-  "Lincoln",
-]
-const popularCitiesCache: Record<string, any[]> = {}
-
-// Prefetch popular cities on module initialization
-async function prefetchPopularCities() {
-  try {
-    const { db } = await connectToDatabase()
-
-    for (const city of POPULAR_CITIES) {
-      const lowercaseCity = city.toLowerCase()
-      const results = await db
-        .collection("cities")
-        .find({
-          area_covered: {
-            $regex: `^${city}`,
-            $options: "i",
-          },
-        })
-        .sort({ area_covered: 1 })
-        .limit(10)
-        .toArray()
-
-      popularCitiesCache[lowercaseCity] = results
-
-      // Also cache partial matches (first 3+ characters)
-      if (city.length > 3) {
-        for (let i = 3; i < city.length; i++) {
-          const partial = city.substring(0, i).toLowerCase()
-          popularCitiesCache[partial] = results
-        }
-      }
-    }
-    console.log("Prefetched popular cities for faster search")
-  } catch (error) {
-    console.error("Error prefetching popular cities:", error)
-  }
-}
-
-// Call prefetch on module initialization
-prefetchPopularCities()
+// Cache expiry time
+const CACHE_EXPIRY = 1000 * 60 * 30 // 30 minutes
 
 export async function GET(request: NextRequest) {
   try {
@@ -87,15 +32,6 @@ export async function GET(request: NextRequest) {
     }
 
     const { db } = await connectToDatabase()
-
-    // Ensure we have an index on area_covered for faster searches
-    try {
-      await db.collection("cities").createIndex({ area_covered: 1 })
-      await db.collection("cities").createIndex({ area_covered: "text" })
-    } catch (error) {
-      // Index might already exist, continue
-      console.log("Index may already exist:", error)
-    }
 
     // First try a prefix search for faster results (starts with)
     const prefixQuery = {
