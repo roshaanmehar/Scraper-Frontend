@@ -1,16 +1,15 @@
-import { MongoClient, type Db } from "mongodb"
+import { MongoClient } from "mongodb"
 
 // Connection URL
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
 
 // Based on the MongoDB Compass screenshot, the correct database is "Cities"
-// "Local" is just the connection name, not a database
 const DATABASE_NAME = "Cities"
 const COLLECTION_NAME = "cities"
 
 // Global caches for city search
-export const cityCache = new Map<string, any[]>()
-export const popularCitiesCache: Record<string, any[]> = {}
+export const cityCache = new Map()
+export const popularCitiesCache = {}
 
 // Popular cities to prefetch
 const POPULAR_CITIES = [
@@ -28,11 +27,11 @@ const POPULAR_CITIES = [
 ]
 
 // Connection caching
-let cachedClient: MongoClient | null = null
-let cachedDb: Db | null = null
+let cachedClient = null
+let cachedDb = null
 let isOptimized = false
 
-export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
+export async function connectToDatabase() {
   // If we already have a connection, use it
   if (cachedClient && cachedDb) {
     return { client: cachedClient, db: cachedDb }
@@ -76,7 +75,7 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
 }
 
 // Optimize database in the background without blocking
-async function optimizeDatabaseInBackground(db: Db) {
+async function optimizeDatabaseInBackground(db) {
   // Only run once per application session
   if (isOptimized) return
 
@@ -112,7 +111,7 @@ async function optimizeDatabaseInBackground(db: Db) {
 }
 
 // Prefetch popular cities for faster searches
-async function prefetchPopularCities(db: Db) {
+async function prefetchPopularCities(db) {
   try {
     console.log("Prefetching popular cities...")
 
@@ -152,9 +151,9 @@ async function prefetchPopularCities(db: Db) {
 }
 
 export async function getBusinessData(
-  collectionName: string,
+  collectionName,
   page = 1,
-  limit = 50,
+  limit = 10,
   searchTerm = "",
   sortField = "businessname",
   sortOrder = "asc",
@@ -165,7 +164,7 @@ export async function getBusinessData(
 
     // Build query - ONLY include records with valid emails
     // This complex query ensures we only get records with actual email values
-    const query: any = {
+    const query = {
       $and: [
         { email: { $exists: true } }, // Email field must exist
         {
@@ -205,7 +204,7 @@ export async function getBusinessData(
     const sortDirection = sortOrder === "asc" ? 1 : -1
 
     // Create sort object
-    const sort: any = {}
+    const sort = {}
     sort[sortField] = sortDirection
 
     console.log(`Sorting by ${sortField} in ${sortOrder} order`)
@@ -246,7 +245,7 @@ export async function getBusinessData(
   }
 }
 
-export async function getCollectionStats(collectionName: string) {
+export async function getCollectionStats(collectionName) {
   try {
     const { db } = await connectToDatabase()
     const collection = db.collection(collectionName)
