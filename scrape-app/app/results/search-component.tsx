@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import type { Restaurant } from "./actions"
@@ -20,6 +20,25 @@ type SearchResultsProps = {
   initialQuery: string
 }
 
+// Common search terms for auto-suggestions
+const COMMON_SEARCH_TERMS = [
+  "restaurant",
+  "cafe",
+  "coffee",
+  "italian",
+  "chinese",
+  "indian",
+  "thai",
+  "pizza",
+  "burger",
+  "vegan",
+  "vegetarian",
+  "bakery",
+  "pub",
+  "bar",
+  "bistro",
+]
+
 export default function SearchComponent({ initialRestaurants, initialPagination, initialQuery }: SearchResultsProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -30,16 +49,93 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
   const [sortOption, setSortOption] = useState("recent")
   const isInitialMount = useRef(true)
   const [showExportOptions, setShowExportOptions] = useState(false)
+  const [searchHistory, setSearchHistory] = useState<string[]>([])
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [searchError, setSearchError] = useState("")
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
-  // Debounce function to prevent too many requests while typing
-  const debounce = (func: Function, delay: number) => {
-    let timeoutId: NodeJS.Timeout
-    return (...args: any[]) => {
-      clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => {
-        func(...args)
-      }, delay)
+  // Load search history from localStorage on component mount
+  useEffect(() => {
+    const storedHistory = localStorage.getItem("searchHistory")
+    if (storedHistory) {
+      try {
+        const parsedHistory = JSON.parse(storedHistory)
+        if (Array.isArray(parsedHistory)) {
+          setSearchHistory(parsedHistory.slice(0, 10)) // Keep only the 10 most recent searches
+        }
+      } catch (e) {
+        console.error("Error parsing search history:", e)
+      }
     }
+  }, [])
+
+  // Save search history to localStorage when it changes
+  useEffect(() => {
+    if (searchHistory.length > 0) {
+      localStorage.setItem("searchHistory", JSON.stringify(searchHistory))
+    }
+  }, [searchHistory])
+
+  // Handle clicks outside the suggestions dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
+  // Clean up any pending requests on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [])
+
+  // Escape special regex characters to prevent errors in search
+  const escapeRegExp = (string: string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  }
+
+  // Generate search suggestions based on input and history
+  const generateSuggestions = (input: string) => {
+    if (!input.trim()) {
+      // If input is empty, show recent searches
+      setSuggestions(searchHistory.slice(0, 5))
+      return
+    }
+
+    const escapedInput = escapeRegExp(input.toLowerCase())
+    const inputRegex = new RegExp(escapedInput, "i")
+
+    // First, check history matches
+    const historyMatches = searchHistory.filter((term) => inputRegex.test(term)).slice(0, 3)
+
+    // Then, check common terms
+    const commonMatches = COMMON_SEARCH_TERMS.filter((term) => inputRegex.test(term)).slice(0, 3)
+
+    // Combine unique matches
+    const allSuggestions = [...new Set([...historyMatches, ...commonMatches])].slice(0, 5)
+    setSuggestions(allSuggestions)
   }
 
   // Function to fetch search results
@@ -51,7 +147,18 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
         return
       }
 
+      // Cancel any previous ongoing fetch
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+
+      // Create a new AbortController for this fetch
+      abortControllerRef.current = new AbortController()
+      const signal = abortControllerRef.current.signal
+
       setIsLoading(true)
+      setSearchError("")
+
       try {
         // Update URL without full page reload only if we have a query
         if (searchQuery.trim()) {
@@ -61,6 +168,12 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
 
           // Update the URL to reflect the search
           router.push(`/results/search?${params.toString()}`, { scroll: false })
+
+          // Add to search history if not already present
+          if (!searchHistory.includes(searchQuery.trim())) {
+            const newHistory = [searchQuery.trim(), ...searchHistory].slice(0, 10)
+            setSearchHistory(newHistory)
+          }
         } else {
           // If search is empty but not initial mount, stay on current page with current data
           if (!isInitialMount.current) {
@@ -69,26 +182,42 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
         }
 
         // Fetch results from API
-        const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}&page=${page}`)
+        const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}&page=${page}`, {
+          signal,
+        })
+
+        if (!response.ok) {
+          throw new Error(`Search failed with status: ${response.status}`)
+        }
+
         const data = await response.json()
 
         setRestaurants(data.restaurants)
         setPagination(data.pagination)
       } catch (error) {
-        console.error("Error fetching search results:", error)
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.error("Error fetching search results:", error)
+          setSearchError(`Search failed: ${error.message}`)
+        }
       } finally {
         setIsLoading(false)
         isInitialMount.current = false
       }
     },
-    [router],
+    [router, searchHistory],
   )
 
   // Debounced search function
   const debouncedSearch = useCallback(
-    debounce((value: string) => {
-      fetchSearchResults(value)
-    }, 300),
+    (value: string) => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchSearchResults(value)
+      }, 300)
+    },
     [fetchSearchResults],
   )
 
@@ -96,7 +225,29 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setQuery(value)
+    generateSuggestions(value)
+    setShowSuggestions(true)
     debouncedSearch(value)
+  }
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion: string) => {
+    setQuery(suggestion)
+    setShowSuggestions(false)
+    fetchSearchResults(suggestion)
+  }
+
+  // Handle search input focus
+  const handleSearchFocus = () => {
+    generateSuggestions(query)
+    setShowSuggestions(true)
+  }
+
+  // Handle search form submission
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setShowSuggestions(false)
+    fetchSearchResults(query)
   }
 
   // Handle sort change
@@ -286,60 +437,134 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
     setIsLoading(false)
   }
 
+  // Clear search input and reset results
+  const handleClearSearch = () => {
+    setQuery("")
+    setShowSuggestions(false)
+    if (initialQuery === "") {
+      // If we're on the main results page, just reset to initial data
+      setRestaurants(initialRestaurants)
+      setPagination(initialPagination)
+    } else {
+      // If we're on a search page, navigate back to main results
+      router.push("/results")
+    }
+  }
+
+  // Highlight matching text in search results
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim() || !text) return text
+
+    try {
+      const escapedQuery = escapeRegExp(query)
+      const parts = text.split(new RegExp(`(${escapedQuery})`, "gi"))
+
+      return parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <span key={i} className="highlight">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )
+    } catch (e) {
+      // If regex fails, return the original text
+      return text
+    }
+  }
+
   return (
     <>
       <div className="card">
-        <div className="search-controls">
-          <div className="search-wrapper">
-            <input
-              type="text"
-              name="query"
-              placeholder="Search by name, email, or phone..."
-              className="search-input"
-              value={query}
-              onChange={handleSearchChange}
-            />
-            {isLoading && <div className="search-loader"></div>}
-          </div>
+        <form onSubmit={handleSearchSubmit} className="search-form">
+          <div className="search-controls">
+            <div className="search-wrapper">
+              <input
+                type="text"
+                name="query"
+                placeholder="Search by name, email, or phone..."
+                className="search-input"
+                value={query}
+                onChange={handleSearchChange}
+                onFocus={handleSearchFocus}
+                ref={searchInputRef}
+                aria-label="Search restaurants"
+                autoComplete="off"
+              />
+              {query && (
+                <button type="button" className="clear-search" onClick={handleClearSearch} aria-label="Clear search">
+                  ×
+                </button>
+              )}
+              {isLoading && <div className="search-loader"></div>}
 
-          <div className="action-controls">
-            <div className="sort-wrapper">
-              <label htmlFor="sort">Sort by:</label>
-              <select id="sort" className="sort-select" value={sortOption} onChange={handleSortChange}>
-                <option value="recent">Most Recent</option>
-                <option value="name">Business Name (A-Z)</option>
-                <option value="reviews">Most Reviews</option>
-              </select>
-            </div>
-
-            <div className="export-container">
-              <button className="btn btn-secondary" onClick={() => setShowExportOptions(!showExportOptions)}>
-                Export
-              </button>
-              {showExportOptions && (
-                <div className="export-dropdown">
-                  <button
-                    onClick={() => {
-                      exportToCSV(false)
-                      setShowExportOptions(false)
-                    }}
-                  >
-                    Export Current Page
-                  </button>
-                  <button
-                    onClick={() => {
-                      exportToCSV(true)
-                      setShowExportOptions(false)
-                    }}
-                  >
-                    Export All Records
-                  </button>
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="search-suggestions" ref={suggestionsRef}>
+                  {suggestions.map((suggestion, index) => (
+                    <div key={index} className="suggestion-item" onClick={() => handleSuggestionClick(suggestion)}>
+                      {suggestion}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+
+            <div className="action-controls">
+              <div className="sort-wrapper">
+                <label htmlFor="sort">Sort by:</label>
+                <select id="sort" className="sort-select" value={sortOption} onChange={handleSortChange}>
+                  <option value="recent">Most Recent</option>
+                  <option value="name">Business Name (A-Z)</option>
+                  <option value="reviews">Most Reviews</option>
+                </select>
+              </div>
+
+              <div className="export-container">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowExportOptions(!showExportOptions)}
+                  disabled={isLoading}
+                >
+                  Export
+                </button>
+                {showExportOptions && (
+                  <div className="export-dropdown">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        exportToCSV(false)
+                        setShowExportOptions(false)
+                      }}
+                    >
+                      Export Current Page
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        exportToCSV(true)
+                        setShowExportOptions(false)
+                      }}
+                    >
+                      Export All Records
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
+
+      {searchError && (
+        <div className="search-error">
+          <p>{searchError}</p>
+          <button onClick={() => setSearchError("")} className="close-error">
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="results-summary">
         {query ? (
@@ -351,11 +576,13 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
         )}
       </div>
 
-      <div className="results-grid">
+      <div className={`results-grid ${isLoading ? "loading-fade" : ""}`}>
         {restaurants.length > 0 ? (
           restaurants.map((restaurant) => (
             <div className="result-card" key={restaurant._id}>
-              <h3 className="business-name">{restaurant.businessname}</h3>
+              <h3 className="business-name">
+                {query ? highlightMatch(restaurant.businessname, query) : restaurant.businessname}
+              </h3>
               <div className="business-details">
                 <div className="detail-item">
                   <span className="detail-label">Email:</span>
@@ -365,18 +592,26 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
                         .filter((email) => email && email !== "N/A" && email !== "n/a" && email.trim() !== "")
                         .map((email, index) => (
                           <span key={index} className="detail-value">
-                            {email}
+                            {query && email.includes("@") ? highlightMatch(email, query) : email}
                           </span>
                         ))
                     ) : (
-                      <span className="detail-value">{restaurant.email}</span>
+                      <span className="detail-value">
+                        {query && restaurant.email && restaurant.email.includes("@")
+                          ? highlightMatch(restaurant.email, query)
+                          : restaurant.email}
+                      </span>
                     )}
                   </div>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Phone:</span>
                   <span className="detail-value">
-                    {restaurant.phonenumber ? restaurant.phonenumber : "No phone available"}
+                    {restaurant.phonenumber
+                      ? query
+                        ? highlightMatch(String(restaurant.phonenumber), query)
+                        : restaurant.phonenumber
+                      : "No phone available"}
                   </span>
                 </div>
                 <div className="detail-item">
@@ -400,7 +635,19 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
           ))
         ) : (
           <div className="no-results">
-            {isLoading ? "Searching..." : `No restaurants found matching "${query}" with valid emails`}
+            {isLoading ? (
+              <div className="results-loading">
+                <div className="results-loader"></div>
+                <p>Searching...</p>
+              </div>
+            ) : (
+              <>
+                <p>No restaurants found matching "{query}" with valid emails</p>
+                <button onClick={handleClearSearch} className="btn btn-outline btn-sm">
+                  Clear Search
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
