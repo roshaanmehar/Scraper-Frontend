@@ -474,11 +474,27 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
     if (!query.trim() || !text) return text
 
     try {
-      const escapedQuery = escapeRegExp(query)
-      const parts = text.split(new RegExp(`(${escapedQuery})`, "gi"))
+      // For phone numbers, normalize both the text and query
+      let searchText = String(text)
+      let searchQuery = query
+
+      // If this looks like a phone number search, try to normalize both for highlighting
+      if (/^\d+$/.test(query.replace(/\D/g, ""))) {
+        searchText = String(text).replace(/\D/g, "")
+        searchQuery = query.replace(/\D/g, "")
+      }
+
+      const escapedQuery = escapeRegExp(searchQuery)
+      const parts = searchText.split(new RegExp(`(${escapedQuery})`, "gi"))
+
+      // If we normalized for phone numbers, we need to map back to the original text
+      if (searchText !== String(text)) {
+        // For phone numbers, just return the original with basic highlighting
+        return <span className="phone-highlight">{String(text)}</span>
+      }
 
       return parts.map((part, i) =>
-        part.toLowerCase() === query.toLowerCase() ? (
+        part.toLowerCase() === searchQuery.toLowerCase() ? (
           <span key={i} className="highlight">
             {part}
           </span>
