@@ -4,11 +4,17 @@ import SearchComponent from "../search-component"
 export default async function SearchResultsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  // Get search parameters directly
-  const query = typeof searchParams.query === "string" ? searchParams.query : ""
-  const page = typeof searchParams.page === "string" ? Number.parseInt(searchParams.page, 10) : 1
+  // Await searchParams before accessing its properties
+  const params = await searchParams
+
+  // Get search parameters and parse them safely
+  const queryParam = params.query
+  const pageParam = params.page
+
+  const query = typeof queryParam === "string" ? queryParam : ""
+  const page = typeof pageParam === "string" ? Number.parseInt(pageParam, 10) : 1
 
   console.log(`Searching for "${query}" on page ${page}...`)
 

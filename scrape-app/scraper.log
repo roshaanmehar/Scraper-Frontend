@@ -1,0 +1,343 @@
+[00:32:39] INFO  – Starting Google Maps scraper
+[00:32:39] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:32:39] INFO  – Connected to MongoDB successfully
+[00:32:39] INFO  – Created queue index
+[00:32:39] INFO  – Created indexes
+[00:32:43] INFO  – Chrome driver initialized successfully
+[00:32:43] INFO  – Processing all unprocessed subsectors
+[00:32:43] INFO  – Total subsectors to process: 144
+[00:32:43] INFO  – ==================================================
+[00:32:43] INFO  – PROCESSING SUBSECTOR: LS14 5 (1/144)
+[00:32:43] INFO  – Starting scrape for subsector: LS14 5
+[00:32:49] INFO  – LS14 5 -> search query launched
+[00:32:50] INFO  – LS14 5 -> Processing 5 tiles
+[00:33:02] INFO  – LS14 5 -> Scraped: Travellers Rest (phone: 1132637096, address: 49 Hill Top Rd, Leeds LS12 3PY, website: https://www.greeneking.co.uk/p...)
+[00:33:12] INFO  – LS14 5 -> Scraped: Las Iguanas - Leeds (phone: 1135189315, address: Unit 3 Cloth Hall St, Leeds LS..., website: https://www.iguanas.co.uk/rest...)
+[00:33:21] INFO  – LS14 5 -> Scraped: Tattu Leeds (phone: 1132451080, address: Minerva, 29 E Parade, Leeds LS..., website: https://tattu.co.uk/locations/...)
+[00:33:30] INFO  – LS14 5 -> Scraped: La Taberna Leeds (phone: 1132450871, address: Britannia House, 16 York Pl, L..., website: http://www.latabernaleeds.com/)
+[00:33:40] INFO  – LS14 5 -> Scraped: The Whitehall Restaurant & Bar (phone: 1132448443, address: West Point, Whitehall Rd, Leed..., website: http://www.thewhitehallleeds.c...)
+[00:33:41] INFO  – LS14 5 -> Processed 5 new tiles in this batch
+[00:33:43] INFO  – LS14 5 -> scrolled feed (tiles now 15)
+[00:33:43] INFO  – LS14 5 -> Total unique businesses processed in this subsector: 5
+[00:33:43] INFO  – LS14 5 -> Processing 15 tiles
+[00:33:53] INFO  – LS14 5 -> Scraped: La Piola Italian - Leeds (phone: 7809126111, address: 2 Park Square E, Leeds LS1 2NE, website: http://lapiolaleeds.co.uk/)
+[00:34:02] INFO  – LS14 5 -> Scraped: Estabulo Rodizio Bar & Grill - Leeds (phone: 1135268856, address: The Light, 22 The Headrow, Lee..., website: https://www.estabulo.co.uk/loc...)
+[00:34:12] INFO  – LS14 5 -> Scraped: TAO Leeds Hot Pot & Cantonese Restaurant (phone: 1138980088, address: 43-47 Great George St, Leeds L..., website: https://www.taoleeds.com/)
+[00:34:22] INFO  – LS14 5 -> Scraped: The Restaurant Bar & Grill Leeds (phone: 1132449625, address: The Old Post Office, 3 City Sq..., website: https://therestaurantbarandgri...)
+[00:34:38] INFO  – LS14 5 -> Scraped: Tharavadu (phone: 1132440500, address: 7-8 Mill Hill, Leeds LS1 5DQ, website: http://www.tharavadurestaurant...)
+[00:34:55] INFO  – LS14 5 -> Scraped: Sous Le Nez (phone: 1134931450, address: 3 Albion Pl, Leeds LS1 6JL, website: http://www.lostandfoundleedscl...)
+[00:35:06] WARNING – Interrupted by user.
+[00:35:06] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)': /session/1d12c89f969777f46191de824a474414
+[00:35:40] INFO  – Starting Google Maps scraper
+[00:35:40] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:35:40] INFO  – Connected to MongoDB successfully
+[00:35:40] INFO  – Created queue index
+[00:35:40] INFO  – Created indexes
+[00:35:42] INFO  – Chrome driver initialized successfully
+[00:35:42] INFO  – Processing all unprocessed subsectors
+[00:35:42] INFO  – Total subsectors to process: 144
+[00:35:42] INFO  – ==================================================
+[00:35:42] INFO  – PROCESSING SUBSECTOR: LS14 3 (1/144)
+[00:35:42] INFO  – Starting scrape for subsector: LS14 3
+[00:35:48] INFO  – LS14 3 -> search query launched
+[00:35:49] INFO  – LS14 3 -> Processing 5 tiles
+[00:35:55] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366AF8C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/execute/sync
+[00:35:59] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366AFBF0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/execute/sync
+[00:36:03] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366AFDD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/execute/sync
+[00:36:11] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D0320>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/element/f.7F3B81C6DD077E6C41B88C82A4273DAE.d.17B7773107CB52225DFC3E3281738105.e.95/element
+[00:36:15] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D0590>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/element/f.7F3B81C6DD077E6C41B88C82A4273DAE.d.17B7773107CB52225DFC3E3281738105.e.95/element
+[00:36:20] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D07A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/element/f.7F3B81C6DD077E6C41B88C82A4273DAE.d.17B7773107CB52225DFC3E3281738105.e.95/element
+[00:36:24] ERROR – LS14 3 -> attempt 1/3 failed: HTTPConnectionPool(host='localhost', port=63920): Max retries exceeded with url: /session/e1b17dfeed00832a32406b759e3c78b3/element/f.7F3B81C6DD077E6C41B88C82A4273DAE.d.17B7773107CB52225DFC3E3281738105.e.95/element (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D09E0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+[00:36:24] ERROR – Traceback: Traceback (most recent call last):
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connection.py", line 199, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connectionpool.py", line 789, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connectionpool.py", line 495, in _make_request
+    conn.request(
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connection.py", line 441, in request
+    self.endheaders()
+  File "C:\Python312\Lib\http\client.py", line 1331, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "C:\Python312\Lib\http\client.py", line 1091, in _send_output
+    self.send(msg)
+  File "C:\Python312\Lib\http\client.py", line 1035, in send
+    self.connect()
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connection.py", line 279, in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connection.py", line 214, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x00000190366D09E0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Roshaan Ali Mehar\Desktop\Scraper-Frontend\scrape-app\server\google_maps_scraper.py", line 1151, in process_subsectors
+    rows, card_count = scrape_subsector(doc, driver, rest_col, args.debug, args.fast)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\Desktop\Scraper-Frontend\scrape-app\server\google_maps_scraper.py", line 927, in scrape_subsector
+    tile_name = get_tile_name(tile)
+                ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\Desktop\Scraper-Frontend\scrape-app\server\google_maps_scraper.py", line 386, in get_tile_name
+    name_element = tile.find_element(By.CSS_SELECTOR, TILE_NAME_CSS)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\selenium\webdriver\remote\webelement.py", line 408, in find_element
+    return self._execute(Command.FIND_CHILD_ELEMENT, {"using": by, "value": value})["value"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\selenium\webdriver\remote\webelement.py", line 395, in _execute
+    return self._parent.execute(command, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\selenium\webdriver\remote\webdriver.py", line 382, in execute
+    response = self.command_executor.execute(driver_command, params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\selenium\webdriver\remote\remote_connection.py", line 404, in execute
+    return self._request(command_info[0], url, body=data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\selenium\webdriver\remote\remote_connection.py", line 428, in _request
+    response = self._conn.request(method, url, body=body, headers=headers, timeout=self._client_config.timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\_request_methods.py", line 143, in request
+    return self.request_encode_body(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\_request_methods.py", line 278, in request_encode_body
+    return self.urlopen(method, url, **extra_kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\poolmanager.py", line 443, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connectionpool.py", line 873, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connectionpool.py", line 873, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connectionpool.py", line 873, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\connectionpool.py", line 843, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Roshaan Ali Mehar\AppData\Roaming\Python\Python312\site-packages\urllib3\util\retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='localhost', port=63920): Max retries exceeded with url: /session/e1b17dfeed00832a32406b759e3c78b3/element/f.7F3B81C6DD077E6C41B88C82A4273DAE.d.17B7773107CB52225DFC3E3281738105.e.95/element (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D09E0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))
+
+[00:36:31] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D1490>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/url
+[00:36:35] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D1880>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/url
+[00:36:39] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D1970>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3/url
+[00:36:43] WARNING – Driver session is no longer valid, recreating...
+[00:36:47] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D1D30>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3
+[00:36:51] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D1E80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3
+[00:36:55] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000190366D20C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/e1b17dfeed00832a32406b759e3c78b3
+[00:37:05] INFO  – Starting scrape for subsector: LS14 3
+[00:37:12] INFO  – Starting Google Maps scraper
+[00:37:12] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:37:12] INFO  – Connected to MongoDB successfully
+[00:37:12] INFO  – Created queue index
+[00:37:13] INFO  – Created indexes
+[00:37:13] INFO  – LS14 3 -> search query launched
+[00:37:16] INFO  – Chrome driver initialized successfully
+[00:37:16] INFO  – Processing all unprocessed subsectors
+[00:37:16] INFO  – Total subsectors to process: 144
+[00:37:16] INFO  – ==================================================
+[00:37:16] INFO  – PROCESSING SUBSECTOR: LS14 9 (1/144)
+[00:37:16] INFO  – Starting scrape for subsector: LS14 9
+[00:37:16] INFO  – LS14 3 -> Processing 5 tiles
+[00:37:23] INFO  – LS14 9 -> search query launched
+[00:37:26] INFO  – LS14 9 -> Processing 5 tiles
+[00:37:31] INFO  – LS14 3 -> Scraped: Bridgewater Arms (phone: 1132038752, address: 5 Cardigan Fields Rd, Burley, ..., website: https://www.greeneking.co.uk/p...)
+[00:37:39] INFO  – LS14 9 -> Scraped: Las Iguanas - Leeds (phone: 1135189315, address: Unit 3 Cloth Hall St, Leeds LS..., website: https://www.iguanas.co.uk/rest...)
+[00:37:42] INFO  – LS14 3 -> Scraped: Las Iguanas - Leeds (phone: 1135189315, address: Unit 3 Cloth Hall St, Leeds LS..., website: https://www.iguanas.co.uk/rest...)
+[00:37:49] INFO  – LS14 9 -> Scraped: Bridgewater Arms (phone: 1132038752, address: 5 Cardigan Fields Rd, Burley, ..., website: https://www.greeneking.co.uk/p...)
+[00:37:51] INFO  – LS14 3 -> Scraped: Moreno's Restaurant & Tapas Bar (phone: 1132604844, address: 54-56 Temple Newsam Rd, Leeds ..., website: http://www.morenos.co.uk/)
+[00:37:59] INFO  – LS14 9 -> Scraped: Moreno's Restaurant & Tapas Bar (phone: 1132604844, address: 54-56 Temple Newsam Rd, Leeds ..., website: http://www.morenos.co.uk/)
+[00:38:01] INFO  – LS14 3 -> Scraped: La Cantina44 Restaurant (phone: 1133680066, address: 1A Austhorpe Rd, Leeds LS15 8Q..., website: https://www.lacantina44.co.uk/)
+[00:38:09] INFO  – LS14 9 -> Scraped: La Cantina44 Restaurant (phone: 1133680066, address: 1A Austhorpe Rd, Leeds LS15 8Q..., website: https://www.lacantina44.co.uk/)
+[00:38:11] INFO  – LS14 3 -> Scraped: Blue Sakura Leeds (phone: 1132442989, address: 2-3 Merrion Way, Leeds LS2 8BT, website: http://www.bluesakura.co.uk/)
+[00:38:12] INFO  – LS14 3 -> Processed 5 new tiles in this batch
+[00:38:15] INFO  – LS14 3 -> scrolled feed (tiles now 15)
+[00:38:15] INFO  – LS14 3 -> Total unique businesses processed in this subsector: 5
+[00:38:15] INFO  – LS14 3 -> Processing 15 tiles
+[00:38:19] INFO  – LS14 9 -> Scraped: Franco's (phone: 1132605580, address: 4600 Park Approach, Leeds LS15..., website: http://www.francosthorpepark.c...)
+[00:38:19] INFO  – LS14 9 -> Processed 5 new tiles in this batch
+[00:38:22] INFO  – LS14 9 -> scrolled feed (tiles now 15)
+[00:38:22] INFO  – LS14 9 -> Total unique businesses processed in this subsector: 5
+[00:38:23] INFO  – LS14 9 -> Processing 15 tiles
+[00:38:24] INFO  – LS14 3 -> Scraped: Franco's (phone: 1132605580, address: 4600 Park Approach, Leeds LS15..., website: http://www.francosthorpepark.c...)
+[00:38:35] INFO  – LS14 3 -> Scraped: Tattu Leeds (phone: 1132451080, address: Minerva, 29 E Parade, Leeds LS..., website: https://tattu.co.uk/locations/...)
+[00:38:36] INFO  – LS14 9 -> Scraped: Tattu Leeds (phone: 1132451080, address: Minerva, 29 E Parade, Leeds LS..., website: https://tattu.co.uk/locations/...)
+[00:38:46] INFO  – LS14 3 -> Scraped: Harvester Colton Mill Leeds (phone: 1132641541, address: Stile Hill Way, Colton, Leeds ..., website: https://www.harvester.co.uk/re...)
+[00:40:21] INFO  – Starting Google Maps scraper
+[00:40:21] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:40:21] INFO  – Connected to MongoDB successfully
+[00:40:21] INFO  – Created queue index
+[00:40:21] INFO  – Created indexes
+[00:40:23] INFO  – Chrome driver initialized successfully
+[00:40:23] INFO  – Processing all unprocessed subsectors
+[00:40:23] INFO  – Total subsectors to process: 144
+[00:40:23] INFO  – ==================================================
+[00:40:23] INFO  – PROCESSING SUBSECTOR: LS15 5 (1/144)
+[00:40:23] INFO  – Starting scrape for subsector: LS15 5
+[00:40:27] INFO  – LS15 5 -> search query launched
+[00:40:29] INFO  – LS15 5 -> Processing 5 tiles
+[00:40:34] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C05826FC20>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:40:38] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C05826FE00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:40:42] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C05826FF80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:40:51] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C058290650>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:40:55] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C058290830>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:40:59] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C058290AA0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:41:08] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C0582911C0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:41:12] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001C0582913A0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/ba7f882f1aae4038d05c7e7fe9d97c2a/actions
+[00:41:33] INFO  – Starting Google Maps scraper
+[00:41:33] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:41:33] INFO  – Connected to MongoDB successfully
+[00:41:33] INFO  – Created queue index
+[00:41:33] INFO  – Created indexes
+[00:41:35] INFO  – Chrome driver initialized successfully
+[00:41:35] INFO  – Processing all unprocessed subsectors
+[00:41:35] INFO  – Total subsectors to process: 144
+[00:41:35] INFO  – ==================================================
+[00:41:35] INFO  – PROCESSING SUBSECTOR: LS15 4 (1/144)
+[00:41:35] INFO  – Starting scrape for subsector: LS15 4
+[00:41:40] ERROR – LS15 4 -> Error during search setup: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=136.0.7103.48)
+Stacktrace:
+	GetHandleVerifier [0x00007FF64F07A145+76773]
+	GetHandleVerifier [0x00007FF64F07A1A0+76864]
+	(No symbol) [0x00007FF64EE38F7A]
+	(No symbol) [0x00007FF64EE24DF5]
+	(No symbol) [0x00007FF64EE49DB4]
+	(No symbol) [0x00007FF64EEBECD5]
+	(No symbol) [0x00007FF64EEDE9C2]
+	(No symbol) [0x00007FF64EEB7133]
+	(No symbol) [0x00007FF64EE804D1]
+	(No symbol) [0x00007FF64EE81263]
+	GetHandleVerifier [0x00007FF64F33A8ED+2962317]
+	GetHandleVerifier [0x00007FF64F334EC2+2939234]
+	GetHandleVerifier [0x00007FF64F352FF3+3062419]
+	GetHandleVerifier [0x00007FF64F094B9A+185914]
+	GetHandleVerifier [0x00007FF64F09C78F+217647]
+	GetHandleVerifier [0x00007FF64F082A44+111844]
+	GetHandleVerifier [0x00007FF64F082BF2+112274]
+	GetHandleVerifier [0x00007FF64F068A79+5401]
+	BaseThreadInitThunk [0x00007FFCB107E8D7+23]
+	RtlUserThreadStart [0x00007FFCB25B14FC+44]
+
+[00:41:40] WARNING – LS15 4 -> attempt 1/3 returned no results
+[00:41:40] WARNING – Driver session is no longer valid, recreating...
+[00:41:44] INFO  – Starting scrape for subsector: LS15 4
+[00:41:49] INFO  – LS15 4 -> search query launched
+[00:41:50] INFO  – LS15 4 -> Processing 5 tiles
+[00:42:02] INFO  – LS15 4 -> Scraped: The Station (phone: 1132608567, address: 1 Station Rd, Cross Gates, Lee..., website: https://www.greeneking.co.uk/p...)
+[00:42:13] INFO  – LS15 4 -> Scraped: The Faversham (phone: 1132431481, address: 1-5 Springfield Mount, Woodhou..., website: http://www.thefaversham.com/)
+[00:42:24] INFO  – LS15 4 -> Scraped: Moreno's Restaurant & Tapas Bar (phone: 1132604844, address: 54-56 Temple Newsam Rd, Leeds ..., website: http://www.morenos.co.uk/)
+[00:42:34] INFO  – LS15 4 -> Scraped: La Cantina44 Restaurant (phone: 1133680066, address: 1A Austhorpe Rd, Leeds LS15 8Q..., website: https://www.lacantina44.co.uk/)
+[00:42:45] INFO  – LS15 4 -> Scraped: Riva Blu Italian Restaurant & Bar, Leeds The Springs (phone: 1133909001, address: Ground Floor, The Springs, Uni..., website: https://rivablu.co.uk/location...)
+[00:42:45] INFO  – LS15 4 -> Processed 5 new tiles in this batch
+[00:42:48] INFO  – LS15 4 -> scrolled feed (tiles now 15)
+[00:42:48] INFO  – LS15 4 -> Total unique businesses processed in this subsector: 5
+[00:42:48] INFO  – LS15 4 -> Processing 15 tiles
+[00:43:03] INFO  – LS15 4 -> Scraped: Sorrento Restaurant (phone: 1132252552, address: 19 Kingswear Parade, Leeds LS1..., website: http://www.sorrentoleeds.co.uk...)
+[00:43:28] WARNING – Interrupted by user.
+[00:44:06] INFO  – Starting Google Maps scraper
+[00:44:06] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:44:06] INFO  – Connected to MongoDB successfully
+[00:44:06] INFO  – Created queue index
+[00:44:06] INFO  – Created indexes
+[00:44:08] INFO  – Chrome driver initialized successfully
+[00:44:08] INFO  – Processing all unprocessed subsectors
+[00:44:08] INFO  – Total subsectors to process: 144
+[00:44:08] INFO  – ==================================================
+[00:44:08] INFO  – PROCESSING SUBSECTOR: LS15 8 (1/144)
+[00:44:08] INFO  – Starting scrape for subsector: LS15 8
+[00:44:14] WARNING – Interrupted by user.
+[00:50:15] INFO  – Starting Google Maps scraper
+[00:50:15] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:50:15] INFO  – Connected to MongoDB successfully
+[00:50:15] INFO  – Created queue index
+[00:50:16] INFO  – Created indexes
+[00:50:17] INFO  – Chrome driver initialized successfully
+[00:50:17] INFO  – Processing all unprocessed subsectors
+[00:50:17] INFO  – Total subsectors to process: 144
+[00:50:17] INFO  – ==================================================
+[00:50:17] INFO  – PROCESSING SUBSECTOR: LS15 9 (1/144)
+[00:50:17] INFO  – Starting scrape for subsector: LS15 9
+[00:50:20] ERROR – LS15 9 -> Error during search setup: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[00:50:20] WARNING – LS15 9 -> attempt 1/3 returned no results
+[00:50:24] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE756F320>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/216bf9556ff2a23c9aff44563ac0f99a/url
+[00:50:28] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE756F3B0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/216bf9556ff2a23c9aff44563ac0f99a/url
+[00:50:32] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE756ED80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/216bf9556ff2a23c9aff44563ac0f99a/url
+[00:50:36] WARNING – Driver session is no longer valid, recreating...
+[00:50:40] WARNING – Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE756D6D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/216bf9556ff2a23c9aff44563ac0f99a
+[00:50:44] WARNING – Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE756FB00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/216bf9556ff2a23c9aff44563ac0f99a
+[00:50:48] WARNING – Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000001FEE756FC80>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it')': /session/216bf9556ff2a23c9aff44563ac0f99a
+[00:50:51] INFO  – Starting Google Maps scraper
+[00:50:51] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:50:51] INFO  – Connected to MongoDB successfully
+[00:50:51] INFO  – Created queue index
+[00:50:51] INFO  – Created indexes
+[00:50:53] INFO  – Chrome driver initialized successfully
+[00:50:53] INFO  – Processing all unprocessed subsectors
+[00:50:53] INFO  – Total subsectors to process: 144
+[00:50:53] INFO  – ==================================================
+[00:50:53] INFO  – PROCESSING SUBSECTOR: LS15 7 (1/144)
+[00:50:53] INFO  – Starting scrape for subsector: LS15 7
+[00:50:56] ERROR – LS15 7 -> Error during search setup: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=136.0.7103.48)
+Stacktrace:
+	GetHandleVerifier [0x00007FF64F07A145+76773]
+	GetHandleVerifier [0x00007FF64F07A1A0+76864]
+	(No symbol) [0x00007FF64EE38F7A]
+	(No symbol) [0x00007FF64EE24DF5]
+	(No symbol) [0x00007FF64EE49DB4]
+	(No symbol) [0x00007FF64EEBECD5]
+	(No symbol) [0x00007FF64EEDE9C2]
+	(No symbol) [0x00007FF64EEB7133]
+	(No symbol) [0x00007FF64EE804D1]
+	(No symbol) [0x00007FF64EE81263]
+	GetHandleVerifier [0x00007FF64F33A8ED+2962317]
+	GetHandleVerifier [0x00007FF64F334EC2+2939234]
+	GetHandleVerifier [0x00007FF64F352FF3+3062419]
+	GetHandleVerifier [0x00007FF64F094B9A+185914]
+	GetHandleVerifier [0x00007FF64F09C78F+217647]
+	GetHandleVerifier [0x00007FF64F082A44+111844]
+	GetHandleVerifier [0x00007FF64F082BF2+112274]
+	GetHandleVerifier [0x00007FF64F068A79+5401]
+	BaseThreadInitThunk [0x00007FFCB107E8D7+23]
+	RtlUserThreadStart [0x00007FFCB25B14FC+44]
+
+[00:50:56] WARNING – LS15 7 -> attempt 1/3 returned no results
+[00:50:56] WARNING – Driver session is no longer valid, recreating...
+[00:50:58] INFO  – Starting scrape for subsector: LS15 9
+[00:51:01] INFO  – Starting scrape for subsector: LS15 7
+[00:51:02] ERROR – LS15 7 -> Error during search setup: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[00:51:02] WARNING – LS15 7 -> attempt 2/3 returned no results
+[00:51:03] WARNING – Interrupted by user.
+[00:52:07] INFO  – Starting Google Maps scraper
+[00:52:07] INFO  – Arguments: Namespace(start=None, end=None, headless=False, subsector=None, debug=False, fast=False, mongo_uri='mongodb://localhost:27017')
+[00:52:07] INFO  – Connected to MongoDB successfully
+[00:52:07] INFO  – Created queue index
+[00:52:07] INFO  – Created indexes
+[00:52:09] INFO  – Chrome driver initialized successfully
+[00:52:09] INFO  – Processing all unprocessed subsectors
+[00:52:09] INFO  – Total subsectors to process: 144
+[00:52:09] INFO  – ==================================================
+[00:52:09] INFO  – PROCESSING SUBSECTOR: LS15 0 (1/144)
+[00:52:09] INFO  – Starting scrape for subsector: LS15 0
+[00:52:15] INFO  – LS15 0 -> search query launched
+[00:52:20] INFO  – LS15 0 -> Processing 5 tiles
+[00:52:20] WARNING – Interrupted by user.

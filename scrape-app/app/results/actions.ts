@@ -67,7 +67,7 @@ function hasValidEmail(restaurant: any): boolean {
   )
 }
 
-export async function getRestaurants(page = 1, limit = 6) {
+export async function getRestaurants(page = 1, limit = 8) {
   try {
     console.log("Connecting to MongoDB...")
     const client = await clientPromise
@@ -137,7 +137,7 @@ export async function getRestaurants(page = 1, limit = 6) {
   }
 }
 
-export async function searchRestaurants(query: string, page = 1, limit = 6) {
+export async function searchRestaurants(query: string, page = 1, limit = 8) {
   try {
     console.log(`Searching for "${query}" in MongoDB...`)
     const client = await clientPromise

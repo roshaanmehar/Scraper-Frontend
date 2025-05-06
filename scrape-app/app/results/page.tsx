@@ -4,10 +4,14 @@ import SearchComponent from "./search-component"
 export default async function ResultsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  // Get page parameter directly
-  const page = typeof searchParams.page === "string" ? Number.parseInt(searchParams.page, 10) : 1
+  // Await searchParams before accessing its properties
+  const params = await searchParams
+
+  // Get page parameter and parse it safely
+  const pageParam = params.page
+  const page = typeof pageParam === "string" ? Number.parseInt(pageParam, 10) : 1
 
   console.log(`Fetching page ${page} from MongoDB...`)
 

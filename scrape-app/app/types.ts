@@ -10,3 +10,11 @@ export type City = {
     scraped_at: string
   }
   
+  export type ScrapeStatus = {
+    status: "idle" | "running" | "completed" | "error" | "unknown"
+    message: string
+    lastRun: string | null
+    recentLogs?: string[]
+    error?: string
+  }
+  

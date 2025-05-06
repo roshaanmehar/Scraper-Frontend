@@ -1,0 +1,217 @@
+[00:38:41] INFO    – --- Email & Social Scraper Initializing ---
+[00:38:41] INFO    – Args: {'threads': 5, 'headless': False, 'debug': False, 'mongo_uri': 'mongodb://localhost:27017', 'db_name': 'Leeds', 'collection': 'restaurants', 'max_sites': 0, 'reset_status': False, 'list_records': False, 'test_url': None, 'export_csv': None}
+[00:38:41] INFO    – Attempting MongoDB connection (1/3)...
+[00:38:41] INFO    – Connected to MongoDB successfully: Leeds/restaurants
+[00:38:41] WARNING – Index check/creation issue (continuing anyway): Index already exists with a different name: emailstatus_1, full error: {'ok': 0.0, 'errmsg': 'Index already exists with a different name: emailstatus_1', 'code': 85, 'codeName': 'IndexOptionsConflict'}
+[00:38:41] INFO    – --- Starting Main Processing ---
+[00:38:41] INFO    – Database Status:
+[00:38:41] INFO    –   Total businesses: 225
+[00:38:41] INFO    –   Businesses with websites: 195
+[00:38:41] INFO    –   Businesses pending email: 168
+[00:38:41] INFO    –   Businesses with emails: 21
+[00:38:41] INFO    –   Businesses checked no email: 3
+[00:38:41] INFO    –   Businesses failed: 3
+[00:38:41] INFO    –   Businesses with social: 3
+[00:38:41] INFO    – Fetching businesses with pending status (Limit: All)...
+[00:38:42] INFO    – Found 168 businesses to process.
+[00:38:42] INFO    – Starting thread pool with 5 workers.
+[00:38:42] INFO    – Processing: Blue Sakura Leeds (http://www.empirecafeleeds.co.uk/)
+[00:38:42] INFO    – Processing: Bramley Fisheries (https://bramleyfisheries.co.uk/)
+[00:38:42] INFO    – Processing: FiveStar burgers and shakes (https://fivestarburgersandshakes.com/)
+[00:38:42] INFO    – Processing: Original Fisheries (https://discoverleeds.co.uk/things-to-see-and-do/food-and-drink/original-fisheries/)
+[00:38:42] INFO    – Processing: LIVIN'Italy (http://livinitaly.com/)
+[00:38:42] INFO    – Submitted 168 tasks to the executor.
+[00:38:46] INFO    – [empirecafeleeds.co.uk] Found 4 emails via requests.
+[00:38:47] INFO    – [discoverleeds.co.uk] Found 2 emails via requests.
+[00:43:04] INFO    – --- Email & Social Scraper Initializing ---
+[00:43:04] INFO    – Args: {'threads': 5, 'headless': False, 'debug': False, 'mongo_uri': 'mongodb://localhost:27017', 'db_name': 'Leeds', 'collection': 'restaurants', 'max_sites': 0, 'reset_status': False, 'list_records': False, 'test_url': None, 'export_csv': None}
+[00:43:04] INFO    – Attempting MongoDB connection (1/3)...
+[00:43:04] INFO    – Connected to MongoDB successfully: Leeds/restaurants
+[00:43:04] WARNING – Index check/creation issue (continuing anyway): Index already exists with a different name: emailstatus_1, full error: {'ok': 0.0, 'errmsg': 'Index already exists with a different name: emailstatus_1', 'code': 85, 'codeName': 'IndexOptionsConflict'}
+[00:43:04] INFO    – --- Starting Main Processing ---
+[00:43:04] INFO    – Database Status:
+[00:43:04] INFO    –   Total businesses: 229
+[00:43:04] INFO    –   Businesses with websites: 199
+[00:43:04] INFO    –   Businesses pending email: 172
+[00:43:04] INFO    –   Businesses with emails: 21
+[00:43:04] INFO    –   Businesses checked no email: 3
+[00:43:04] INFO    –   Businesses failed: 3
+[00:43:04] INFO    –   Businesses with social: 3
+[00:43:04] INFO    – Fetching businesses with pending status (Limit: All)...
+[00:43:04] INFO    – Found 172 businesses to process.
+[00:43:04] INFO    – Starting thread pool with 5 workers.
+[00:43:04] INFO    – Processing: Blue Sakura Leeds (http://www.empirecafeleeds.co.uk/)
+[00:43:04] INFO    – Processing: Bramley Fisheries (https://bramleyfisheries.co.uk/)
+[00:43:04] INFO    – Processing: FiveStar burgers and shakes (https://fivestarburgersandshakes.com/)
+[00:43:04] INFO    – Processing: Original Fisheries (https://discoverleeds.co.uk/things-to-see-and-do/food-and-drink/original-fisheries/)
+[00:43:04] INFO    – Processing: LIVIN'Italy (http://livinitaly.com/)
+[00:43:04] INFO    – Submitted 172 tasks to the executor.
+[00:43:12] WARNING – Failed to inject CDP stealth script: Message: target frame detached
+  (failed to check if window was closed: disconnected: Unable to receive message from renderer)
+  (Session info: chrome=136.0.7103.48)
+Stacktrace:
+	GetHandleVerifier [0x00007FF64F07A145+76773]
+	GetHandleVerifier [0x00007FF64F07A1A0+76864]
+	(No symbol) [0x00007FF64EE38DAC]
+	(No symbol) [0x00007FF64EE2613B]
+	(No symbol) [0x00007FF64EE24FFE]
+	(No symbol) [0x00007FF64EE49DB4]
+	(No symbol) [0x00007FF64EEBECD5]
+	(No symbol) [0x00007FF64EEDE9C2]
+	(No symbol) [0x00007FF64EEB7133]
+	(No symbol) [0x00007FF64EE804D1]
+	(No symbol) [0x00007FF64EE81263]
+	GetHandleVerifier [0x00007FF64F33A8ED+2962317]
+	GetHandleVerifier [0x00007FF64F334EC2+2939234]
+	GetHandleVerifier [0x00007FF64F352FF3+3062419]
+	GetHandleVerifier [0x00007FF64F094B9A+185914]
+	GetHandleVerifier [0x00007FF64F09C78F+217647]
+	GetHandleVerifier [0x00007FF64F082A44+111844]
+	GetHandleVerifier [0x00007FF64F082BF2+112274]
+	GetHandleVerifier [0x00007FF64F068A79+5401]
+	BaseThreadInitThunk [0x00007FFCB107E8D7+23]
+	RtlUserThreadStart [0x00007FFCB25B14FC+44]
+
+[00:43:13] WARNING – Failed to inject CDP stealth script: Message: target frame detached: received Inspector.detached event
+  (failed to check if window was closed: disconnected: Unable to receive message from renderer)
+  (Session info: chrome=136.0.7103.48)
+Stacktrace:
+	GetHandleVerifier [0x00007FF64F07A145+76773]
+	GetHandleVerifier [0x00007FF64F07A1A0+76864]
+	(No symbol) [0x00007FF64EE38F7A]
+	(No symbol) [0x00007FF64EE27C4A]
+	(No symbol) [0x00007FF64EE26A12]
+	(No symbol) [0x00007FF64EE264D6]
+	(No symbol) [0x00007FF64EE2619A]
+	(No symbol) [0x00007FF64EE23E47]
+	(No symbol) [0x00007FF64EE247FF]
+	(No symbol) [0x00007FF64EE24730]
+	(No symbol) [0x00007FF64EE3DD63]
+	(No symbol) [0x00007FF64EEED8CE]
+	(No symbol) [0x00007FF64EEB735A]
+	(No symbol) [0x00007FF64EEDF0CF]
+	(No symbol) [0x00007FF64EEB7133]
+	(No symbol) [0x00007FF64EE804D1]
+	(No symbol) [0x00007FF64EE81263]
+	GetHandleVerifier [0x00007FF64F33A8ED+2962317]
+	GetHandleVerifier [0x00007FF64F334EC2+2939234]
+	GetHandleVerifier [0x00007FF64F352FF3+3062419]
+	GetHandleVerifier [0x00007FF64F094B9A+185914]
+	GetHandleVerifier [0x00007FF64F09C78F+217647]
+	GetHandleVerifier [0x00007FF64F082A44+111844]
+	GetHandleVerifier [0x00007FF64F082BF2+112274]
+	GetHandleVerifier [0x00007FF64F068A79+5401]
+	BaseThreadInitThunk [0x00007FFCB107E8D7+23]
+	RtlUserThreadStart [0x00007FFCB25B14FC+44]
+
+[00:43:13] INFO    – [empirecafeleeds.co.uk] Found 4 emails via requests.
+[00:43:14] INFO    – [discoverleeds.co.uk] Found 2 emails via requests.
+[00:43:18] ERROR   – [livinitaly.com] Driver died before Selenium main page attempt for http://livinitaly.com/
+[00:43:18] WARNING – [livinitaly.com] Selenium failed on main page http://livinitaly.com/: WebDriverException - Message: Driver died
+
+[00:43:19] WARNING – Failed to inject CDP stealth script: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: unable to send message to renderer
+  (Session info: chrome=136.0.7103.48)
+Stacktrace:
+	GetHandleVerifier [0x00007FF64F07A145+76773]
+	GetHandleVerifier [0x00007FF64F07A1A0+76864]
+	(No symbol) [0x00007FF64EE38F7A]
+	(No symbol) [0x00007FF64EE25411]
+	(No symbol) [0x00007FF64EE2537C]
+	(No symbol) [0x00007FF64EE23BEA]
+	(No symbol) [0x00007FF64EE247FF]
+	(No symbol) [0x00007FF64EE4FE4B]
+	(No symbol) [0x00007FF64EE43480]
+	(No symbol) [0x00007FF64EE43322]
+	(No symbol) [0x00007FF64EE345E5]
+	(No symbol) [0x00007FF64EE33F6F]
+	(No symbol) [0x00007FF64EE497E1]
+	(No symbol) [0x00007FF64EE5091A]
+	(No symbol) [0x00007FF64EE24F6D]
+	(No symbol) [0x00007FF64EE48FD1]
+	(No symbol) [0x00007FF64EEDEFA9]
+	(No symbol) [0x00007FF64EEB7133]
+	(No symbol) [0x00007FF64EE804D1]
+	(No symbol) [0x00007FF64EE81263]
+	GetHandleVerifier [0x00007FF64F33A8ED+2962317]
+	GetHandleVerifier [0x00007FF64F334EC2+2939234]
+	GetHandleVerifier [0x00007FF64F352FF3+3062419]
+	GetHandleVerifier [0x00007FF64F094B9A+185914]
+	GetHandleVerifier [0x00007FF64F09C78F+217647]
+	GetHandleVerifier [0x00007FF64F082A44+111844]
+	GetHandleVerifier [0x00007FF64F082BF2+112274]
+	GetHandleVerifier [0x00007FF64F068A79+5401]
+	BaseThreadInitThunk [0x00007FFCB107E8D7+23]
+	RtlUserThreadStart [0x00007FFCB25B14FC+44]
+
+[00:43:19] ERROR   – Failed to create WebDriver: Message: invalid session id
+Stacktrace:
+	GetHandleVerifier [0x00007FF64F07A145+76773]
+	GetHandleVerifier [0x00007FF64F07A1A0+76864]
+	(No symbol) [0x00007FF64EE38DAC]
+	(No symbol) [0x00007FF64EE7F5FF]
+	(No symbol) [0x00007FF64EEB7222]
+	(No symbol) [0x00007FF64EEB1C43]
+	(No symbol) [0x00007FF64EEB0D09]
+	(No symbol) [0x00007FF64EE05A55]
+	GetHandleVerifier [0x00007FF64F33A8ED+2962317]
+	GetHandleVerifier [0x00007FF64F334EC2+2939234]
+	GetHandleVerifier [0x00007FF64F352FF3+3062419]
+	GetHandleVerifier [0x00007FF64F094B9A+185914]
+	GetHandleVerifier [0x00007FF64F09C78F+217647]
+	(No symbol) [0x00007FF64EE04AC8]
+	GetHandleVerifier [0x00007FF64F4462A8+4058440]
+	BaseThreadInitThunk [0x00007FFCB107E8D7+23]
+	RtlUserThreadStart [0x00007FFCB25B14FC+44]
+
+[00:43:19] ERROR   – [livinitaly.com] Driver died before Selenium contact page attempt for http://livinitaly.com/contact
+[00:43:19] WARNING – [livinitaly.com] Selenium failed on contact page http://livinitaly.com/contact: WebDriverException - Message: Driver died
+
+[00:43:19] ERROR   – [livinitaly.com] Driver died during contact page processing. Stopping search for http://livinitaly.com/
+[00:43:19] WARNING – [livinitaly.com] FAILED: Processing ended with status 'failed'.
+[00:43:20] ERROR   – [empirecafeleeds.co.uk] Driver died before Selenium main page attempt for http://www.empirecafeleeds.co.uk/
+[00:43:20] WARNING – [empirecafeleeds.co.uk] Selenium failed on main page http://www.empirecafeleeds.co.uk/: WebDriverException - Message: Driver died
+
+[00:43:20] INFO    – [empirecafeleeds.co.uk] SUCCESS: Found 4 emails. Top: Bookings@empirecafeleeds.co.uk
+[00:43:20] INFO    – [empirecafeleeds.co.uk] Found 2 social profiles: ['facebook', 'instagram']
+[00:43:20] ERROR   – [discoverleeds.co.uk] Driver died before Selenium main page attempt for https://discoverleeds.co.uk/things-to-see-and-do/food-and-drink/original-fisheries/
+[00:43:20] WARNING – [discoverleeds.co.uk] Selenium failed on main page https://discoverleeds.co.uk/things-to-see-and-do/food-and-drink/original-fisheries/: WebDriverException - Message: Driver died
+
+[00:43:20] INFO    – [discoverleeds.co.uk] SUCCESS: Found 2 emails. Top: hello@discoverleeds.co.uk
+[00:43:20] INFO    – [discoverleeds.co.uk] Found 3 social profiles: ['twitter', 'instagram', 'facebook']
+[00:43:20] ERROR   – Failed to create WebDriver: Message: session not created: probably user data directory is already in use, please specify a unique value for --user-data-dir argument, or don't use --user-data-dir
+Stacktrace:
+	GetHandleVerifier [0x00007FF64F07A145+76773]
+	GetHandleVerifier [0x00007FF64F07A1A0+76864]
+	(No symbol) [0x00007FF64EE38F7A]
+	(No symbol) [0x00007FF64EE75B82]
+	(No symbol) [0x00007FF64EE71B5D]
+	(No symbol) [0x00007FF64EEC5155]
+	(No symbol) [0x00007FF64EEC4710]
+	(No symbol) [0x00007FF64EEB7133]
+	(No symbol) [0x00007FF64EE804D1]
+	(No symbol) [0x00007FF64EE81263]
+	GetHandleVerifier [0x00007FF64F33A8ED+2962317]
+	GetHandleVerifier [0x00007FF64F334EC2+2939234]
+	GetHandleVerifier [0x00007FF64F352FF3+3062419]
+	GetHandleVerifier [0x00007FF64F094B9A+185914]
+	GetHandleVerifier [0x00007FF64F09C78F+217647]
+	GetHandleVerifier [0x00007FF64F082A44+111844]
+	GetHandleVerifier [0x00007FF64F082BF2+112274]
+	GetHandleVerifier [0x00007FF64F068A79+5401]
+	BaseThreadInitThunk [0x00007FFCB107E8D7+23]
+	RtlUserThreadStart [0x00007FFCB25B14FC+44]
+
+[00:43:21] ERROR   – Failed to create driver for FiveStar burgers and shakes, marking as failed.
+[00:43:21] ERROR   – Error processing FiveStar burgers and shakes (https://fivestarburgersandshakes.com/): Driver creation failed
+[00:43:21] INFO    – Marked FiveStar burgers and shakes as failed in DB.
+[00:43:21] INFO    – Processing: Fazenda Rodizio Bar & Grill Leeds (https://fazenda.co.uk/location/leeds?utm_source=gbp&utm_medium=organic&utm_campaign=gbp-listing&utm_content=fazenda-leeds)
+[00:43:21] INFO    – Processing: Bibis Restaurant (http://www.bibisrestaurant.com/)
+[00:43:22] INFO    – Processing: Bridgewater Arms (https://www.greeneking.co.uk/pubs/west-yorkshire/bridgewater-arms?utm_source=g_places&utm_medium=locations&utm_campaign=FG_pubpage)
+[00:43:22] INFO    – Processing: MyLahore Leeds (http://www.mylahore.co.uk/)
+[00:43:24] ERROR   – Failed to create driver for Bramley Fisheries, marking as failed.
+[00:43:24] ERROR   – Error processing Bramley Fisheries (https://bramleyfisheries.co.uk/): Driver creation failed
+[00:43:24] INFO    – Marked Bramley Fisheries as failed in DB.
+[00:43:24] INFO    – Processing: Ox Club (http://oxclub.co.uk/)
+[00:43:28] WARNING – Failed to inject CDP stealth script: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+[00:43:28] WARNING – Failed to inject CDP stealth script: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
