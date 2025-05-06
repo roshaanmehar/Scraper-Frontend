@@ -194,6 +194,11 @@ button:disabled {
   background-color: #f0f0f0;
 }
 
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
 /* Button container */
 .button-container {
   display: flex;
@@ -207,6 +212,10 @@ button:disabled {
 }
 
 /* Results page styles */
+.search-form {
+  width: 100%;
+}
+
 .search-controls {
   display: flex;
   flex-direction: column;
@@ -218,21 +227,69 @@ button:disabled {
   position: relative;
 }
 
-.search-input {
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.search-input-container:focus-within {
+  border-color: #000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-input {
+  flex: 1;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  font-size: 1rem;
+  background: transparent;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.clear-search {
+  position: relative;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.clear-search:hover {
+  color: #333;
+  background-color: #f0f0f0;
 }
 
 .search-loader {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
   width: 20px;
   height: 20px;
-  border: 2px solid #f3f3f3;
+  margin-right: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
   border-top: 2px solid #000;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -276,12 +333,74 @@ button:disabled {
   display: inline-block;
 }
 
+/* Search suggestions */
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  margin-top: 4px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.suggestion-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #f8f8f8;
+}
+
+/* Search error */
+.search-error {
+  background-color: #fff0f0;
+  color: #d32f2f;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.close-error {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Results grid styles - OPTIMIZED FOR 8+ RESULTS */
 .results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   gap: 1rem;
   margin-top: 0.75rem;
+  transition: opacity 0.3s ease;
+}
+
+.loading-fade {
+  opacity: 0.6;
 }
 
 .result-card {
@@ -358,6 +477,13 @@ button:disabled {
   background-color: #e8e8e8;
 }
 
+.highlight {
+  background-color: #fffde7;
+  font-weight: 500;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
 .address {
   line-height: 1.4;
 }
@@ -391,6 +517,22 @@ button:disabled {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   color: #555;
   font-style: italic;
+}
+
+.results-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.results-loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 /* Pagination styles */
@@ -508,6 +650,19 @@ button:disabled {
   .pagination {
     flex-direction: column;
     gap: 0.8rem;
+  }
+
+  .search-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .action-controls {
+    width: 100%;
   }
 }
 
