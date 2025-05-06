@@ -922,3 +922,10 @@ button:disabled {
   color: #d32f2f;
   border-left: 3px solid #d32f2f;
 }
+
+.phone-highlight {
+  background-color: #f0f7ff;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border-bottom: 1px dashed #000;
+}
