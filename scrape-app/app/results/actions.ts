@@ -145,6 +145,9 @@ export async function searchRestaurants(query: string, page = 1, limit = 8) {
 
     // Try to convert query to number for phonenumber search
     let phoneQuery = null
+    // Normalize the phone number by removing non-numeric characters
+    const normalizedPhoneQuery = query.replace(/\D/g, "")
+
     if (!isNaN(Number(query))) {
       phoneQuery = Number(query)
     }
@@ -165,9 +168,18 @@ export async function searchRestaurants(query: string, page = 1, limit = 8) {
         {
           $or: [
             { businessname: { $regex: query, $options: "i" } },
-            ...(phoneQuery !== null
-              ? [{ phonenumber: phoneQuery }]
-              : [{ phonenumber: { $regex: query, $options: "i" } }]),
+            // Try multiple approaches for phone number search
+            ...(phoneQuery !== null ? [{ phonenumber: phoneQuery }] : []),
+            // Search for phone numbers as strings (for partial matches)
+            { phonenumber: { $regex: normalizedPhoneQuery, $options: "i" } },
+            // Also search in the original phonenumber field as a string
+            { phonenumber: { $regex: query, $options: "i" } },
+            // Convert phonenumber to string for regex search
+            {
+              $expr: {
+                $regexMatch: { input: { $toString: "$phonenumber" }, regex: normalizedPhoneQuery, options: "i" },
+              },
+            },
             { email: { $regex: query, $options: "i" } },
             { subsector: { $regex: query, $options: "i" } },
           ],
