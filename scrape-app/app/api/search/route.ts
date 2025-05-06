@@ -8,8 +8,12 @@ export async function GET(request: NextRequest) {
   const sort = searchParams.get("sort") || "recent"
 
   try {
-    // Add a small artificial delay for better UX with loading indicators (remove in production)
-    // await new Promise(resolve => setTimeout(resolve, 300))
+    console.log(`Search API: Searching for "${query}" (page ${page}, sort ${sort})`)
+
+    // Check if query might be a phone number
+    if (/\d/.test(query)) {
+      console.log(`Search API: Query contains digits, might be a phone number search`)
+    }
 
     const results = await searchRestaurants(query, page)
     return NextResponse.json(results)
