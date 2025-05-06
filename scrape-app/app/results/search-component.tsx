@@ -441,13 +441,31 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
   const handleClearSearch = () => {
     setQuery("")
     setShowSuggestions(false)
+
+    // Cancel any pending search requests
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
     if (initialQuery === "") {
       // If we're on the main results page, just reset to initial data
       setRestaurants(initialRestaurants)
       setPagination(initialPagination)
+
+      // Update URL to remove query parameters
+      router.push("/results", { scroll: false })
     } else {
       // If we're on a search page, navigate back to main results
       router.push("/results")
+    }
+
+    // Focus the search input after clearing
+    if (searchInputRef.current) {
+      searchInputRef.current.focus()
     }
   }
 
@@ -480,24 +498,26 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
         <form onSubmit={handleSearchSubmit} className="search-form">
           <div className="search-controls">
             <div className="search-wrapper">
-              <input
-                type="text"
-                name="query"
-                placeholder="Search by name, email, or phone..."
-                className="search-input"
-                value={query}
-                onChange={handleSearchChange}
-                onFocus={handleSearchFocus}
-                ref={searchInputRef}
-                aria-label="Search restaurants"
-                autoComplete="off"
-              />
-              {query && (
-                <button type="button" className="clear-search" onClick={handleClearSearch} aria-label="Clear search">
-                  ×
-                </button>
-              )}
-              {isLoading && <div className="search-loader"></div>}
+              <div className="search-input-container">
+                <input
+                  type="text"
+                  name="query"
+                  placeholder="Search by name, email, or phone..."
+                  className="search-input"
+                  value={query}
+                  onChange={handleSearchChange}
+                  onFocus={handleSearchFocus}
+                  ref={searchInputRef}
+                  aria-label="Search restaurants"
+                  autoComplete="off"
+                />
+                {query && (
+                  <button type="button" className="clear-search" onClick={handleClearSearch} aria-label="Clear search">
+                    ×
+                  </button>
+                )}
+                {isLoading && <div className="search-loader"></div>}
+              </div>
 
               {showSuggestions && suggestions.length > 0 && (
                 <div className="search-suggestions" ref={suggestionsRef}>
