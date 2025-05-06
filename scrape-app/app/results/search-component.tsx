@@ -474,27 +474,11 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
     if (!query.trim() || !text) return text
 
     try {
-      // For phone numbers, normalize both the text and query
-      let searchText = String(text)
-      let searchQuery = query
-
-      // If this looks like a phone number search, try to normalize both for highlighting
-      if (/^\d+$/.test(query.replace(/\D/g, ""))) {
-        searchText = String(text).replace(/\D/g, "")
-        searchQuery = query.replace(/\D/g, "")
-      }
-
-      const escapedQuery = escapeRegExp(searchQuery)
-      const parts = searchText.split(new RegExp(`(${escapedQuery})`, "gi"))
-
-      // If we normalized for phone numbers, we need to map back to the original text
-      if (searchText !== String(text)) {
-        // For phone numbers, just return the original with basic highlighting
-        return <span className="phone-highlight">{String(text)}</span>
-      }
+      const escapedQuery = escapeRegExp(query)
+      const parts = text.split(new RegExp(`(${escapedQuery})`, "gi"))
 
       return parts.map((part, i) =>
-        part.toLowerCase() === searchQuery.toLowerCase() ? (
+        part.toLowerCase() === query.toLowerCase() ? (
           <span key={i} className="highlight">
             {part}
           </span>
@@ -506,6 +490,66 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
       // If regex fails, return the original text
       return text
     }
+  }
+
+  // Better highlight phone numbers that might be formatted differently
+  const highlightPhoneMatch = (phoneText: string | number, query: string) => {
+    if (!query.trim() || !phoneText) return phoneText
+
+    const phoneStr = String(phoneText)
+    const queryDigits = query.replace(/[^0-9]/g, "")
+
+    if (!queryDigits) {
+      return phoneStr
+    }
+
+    try {
+      // If query digits found in phone, highlight them
+      const phoneDigits = phoneStr.replace(/[^0-9]/g, "")
+      const phoneDigitsIndex = phoneDigits.indexOf(queryDigits)
+
+      if (phoneDigitsIndex >= 0) {
+        // Create parts array with highlighted digits
+        let currentPos = 0
+        let displayPhone = ""
+        let isHighlighting = false
+
+        for (let i = 0; i < phoneStr.length; i++) {
+          const char = phoneStr[i]
+          const isDigit = /[0-9]/.test(char)
+
+          if (isDigit) {
+            // If we're at the position where match starts
+            if (currentPos === phoneDigitsIndex && !isHighlighting) {
+              displayPhone += '<span class="highlight">'
+              isHighlighting = true
+            }
+
+            // If we're at the position where match ends
+            if (currentPos === phoneDigitsIndex + queryDigits.length && isHighlighting) {
+              displayPhone += "</span>"
+              isHighlighting = false
+            }
+
+            currentPos++
+          }
+
+          displayPhone += char
+        }
+
+        // Close highlight span if still open
+        if (isHighlighting) {
+          displayPhone += "</span>"
+        }
+
+        return <span dangerouslySetInnerHTML={{ __html: displayPhone }} />
+      }
+    } catch (e) {
+      // In case of regex errors, return the original
+      return phoneStr
+    }
+
+    return phoneStr
   }
 
   return (
@@ -645,7 +689,7 @@ export default function SearchComponent({ initialRestaurants, initialPagination,
                   <span className="detail-value">
                     {restaurant.phonenumber
                       ? query
-                        ? highlightMatch(String(restaurant.phonenumber), query)
+                        ? highlightPhoneMatch(restaurant.phonenumber, query)
                         : restaurant.phonenumber
                       : "No phone available"}
                   </span>
